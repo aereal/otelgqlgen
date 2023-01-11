@@ -1,0 +1,17 @@
+type User {
+  name: String!
+  age: Int
+}
+
+input NestedInput {
+  val: String
+}
+
+input RootInput {
+  nested: NestedInput! = {val: ""}
+}
+
+type Query {
+  user(name: String!): User
+  root(num: Int, rootInput: RootInput = {nested: {}}): Boolean!
+}
