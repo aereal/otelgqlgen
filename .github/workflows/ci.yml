@@ -1,0 +1,52 @@
+name: CI
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3.3.0
+      - name: lint
+        uses: reviewdog/action-golangci-lint@v2.2.2
+  test:
+    env:
+      TEST_TARGET: ./...
+    strategy:
+      matrix:
+        go_version:
+          - '1.18.x'
+          - '1.19.x'
+        os:
+          - ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v3.3.0
+      - uses: actions/setup-go@v3.5.0
+        with:
+          go-version: ${{ matrix.go_version }}
+          cache: true
+      - run: go mod download
+      - name: test
+        run: go test -v -race -coverprofile=cover.out $TEST_TARGET
+      - uses: actions/upload-artifact@v3.1.2
+        with:
+          name: coverage
+          path: ./cover.out
+          if-no-files-found: error
+  report-coverage:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      pull-requests: write
+    needs:
+      - test
+    steps:
+      - uses: actions/checkout@v3.3.0
+      - uses: actions/download-artifact@v3.0.2
+        with:
+          name: coverage
+      - uses: k1LoW/octocov-action@v0.46.0
