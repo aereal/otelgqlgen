@@ -18,13 +18,15 @@ import (
 )
 
 const (
-	extensionName   = "CustomOpenTelemetryTracer"
-	tracerName      = "github.com/aereal/otel-gqlgen"
-	anonymousOpName = "anonymous-op"
+	extensionName                  = "CustomOpenTelemetryTracer"
+	tracerName                     = "github.com/aereal/otel-gqlgen"
+	anonymousOpName                = "anonymous-op"
+	defaultComplexityExtensionName = "ComplexityLimit"
 )
 
 type config struct {
-	tracerProvider trace.TracerProvider
+	tracerProvider          trace.TracerProvider
+	complexityExtensionName string
 }
 
 type Option func(c *config)
@@ -32,6 +34,13 @@ type Option func(c *config)
 func WithTracerProvider(tp trace.TracerProvider) Option {
 	return func(c *config) {
 		c.tracerProvider = tp
+	}
+}
+
+// WithComplexityLimitExtensionName creates an Option that tells Tracer to get complexity stats calculated by the extension identified by the given name.
+func WithComplexityLimitExtensionName(extName string) Option {
+	return func(c *config) {
+		c.complexityExtensionName = extName
 	}
 }
 
@@ -44,13 +53,18 @@ func New(opts ...Option) Tracer {
 		cfg.tracerProvider = otel.GetTracerProvider()
 	}
 	t := Tracer{
-		tracer: cfg.tracerProvider.Tracer(tracerName, trace.WithInstrumentationVersion(contrib.SemVersion())),
+		tracer:                  cfg.tracerProvider.Tracer(tracerName, trace.WithInstrumentationVersion(contrib.SemVersion())),
+		complexityExtensionName: cfg.complexityExtensionName,
+	}
+	if t.complexityExtensionName == "" {
+		t.complexityExtensionName = defaultComplexityExtensionName
 	}
 	return t
 }
 
 type Tracer struct {
-	tracer trace.Tracer
+	tracer                  trace.Tracer
+	complexityExtensionName string
 }
 
 var _ interface {
@@ -81,7 +95,7 @@ func (t Tracer) InterceptResponse(ctx context.Context, next graphql.ResponseHand
 	}
 	t.captureOperationTimings(ctx)
 
-	attrs := make([]attribute.KeyValue, 0, len(opCtx.Variables)+2)
+	attrs := make([]attribute.KeyValue, 0, len(opCtx.Variables)+2+2)
 	for k, v := range opCtx.Variables {
 		attrs = append(attrs, attrReqVariable(k, v))
 	}
@@ -89,6 +103,12 @@ func (t Tracer) InterceptResponse(ctx context.Context, next graphql.ResponseHand
 		attrs = append(attrs,
 			attribute.String(apqPrefix.With("hash").Encode(), stats.Hash),
 			attribute.Bool(apqPrefix.With("sent_query").Encode(), stats.SentQuery),
+		)
+	}
+	if stats, ok := opCtx.Stats.GetExtension(t.complexityExtensionName).(*extension.ComplexityStats); stats != nil && ok {
+		attrs = append(attrs,
+			attribute.Int(complexityPrefix.With("limit").Encode(), stats.ComplexityLimit),
+			attribute.Int(complexityPrefix.With("calculated").Encode(), stats.Complexity),
 		)
 	}
 	span.SetAttributes(attrs...)
@@ -225,12 +245,13 @@ func attrReqVariable(key string, val any) attribute.KeyValue {
 }
 
 var (
-	attrPrefix     = attrNameHierarchy{"gql"}
-	errPrefix      = attrPrefix.With("errors")
-	resolverPrefix = attrPrefix.With("resolver")
-	argsPrefix     = resolverPrefix.With("args")
-	requestPrefix  = attrPrefix.With("request")
-	apqPrefix      = requestPrefix.With("apq")
+	attrPrefix       = attrNameHierarchy{"gql"}
+	errPrefix        = attrPrefix.With("errors")
+	resolverPrefix   = attrPrefix.With("resolver")
+	argsPrefix       = resolverPrefix.With("args")
+	requestPrefix    = attrPrefix.With("request")
+	apqPrefix        = requestPrefix.With("apq")
+	complexityPrefix = requestPrefix.With("complexity")
 )
 
 type attrNameHierarchy []string

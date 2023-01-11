@@ -70,7 +70,15 @@ func TestTracer(t *testing.T) {
 						attribute.Bool("gql.resolver.is_method", false),
 						attribute.Bool("gql.resolver.is_resolver", false),
 					}},
-				{Name: "anonymous-op", SpanKind: trace.SpanKindServer, Attributes: []attribute.KeyValue{attribute.String("gql.request.variables.name", "aereal")}},
+				{
+					Name:     "anonymous-op",
+					SpanKind: trace.SpanKindServer,
+					Attributes: []attribute.KeyValue{
+						attribute.String("gql.request.variables.name", "aereal"),
+						attribute.Int("gql.request.complexity.limit", 1000),
+						attribute.Int("gql.request.complexity.calculated", 2),
+					},
+				},
 			},
 		},
 		{
@@ -119,6 +127,8 @@ func TestTracer(t *testing.T) {
 						attribute.String("gql.request.variables.name", "aereal"),
 						attribute.String("gql.request.apq.hash", "d27e6805f86ffaf5b1c96ad70fe044580f6454a7731b30f0e93494afe25294d6"),
 						attribute.Bool("gql.request.apq.sent_query", true),
+						attribute.Int("gql.request.complexity.limit", 1000),
+						attribute.Int("gql.request.complexity.calculated", 2),
 					},
 				},
 			},
@@ -146,10 +156,14 @@ func TestTracer(t *testing.T) {
 						attribute.Bool("gql.resolver.is_resolver", true),
 					}},
 				{
-					Name:       "anonymous-op",
-					SpanKind:   trace.SpanKindServer,
-					Status:     sdktrace.Status{Code: codes.Error, Description: "input: user forbidden\n"},
-					Attributes: []attribute.KeyValue{attribute.String("gql.request.variables.name", "forbidden")},
+					Name:     "anonymous-op",
+					SpanKind: trace.SpanKindServer,
+					Status:   sdktrace.Status{Code: codes.Error, Description: "input: user forbidden\n"},
+					Attributes: []attribute.KeyValue{
+						attribute.String("gql.request.variables.name", "forbidden"),
+						attribute.Int("gql.request.complexity.limit", 1000),
+						attribute.Int("gql.request.complexity.calculated", 2),
+					},
 					Events: []sdktrace.Event{
 						{
 							Name: semconv.ExceptionEventName,
@@ -189,7 +203,14 @@ func TestTracer(t *testing.T) {
 						attribute.Bool("gql.resolver.is_method", true),
 						attribute.Bool("gql.resolver.is_resolver", true),
 					}},
-				{Name: "anonymous-op", SpanKind: trace.SpanKindServer},
+				{
+					Name:     "anonymous-op",
+					SpanKind: trace.SpanKindServer,
+					Attributes: []attribute.KeyValue{
+						attribute.Int("gql.request.complexity.limit", 1000),
+						attribute.Int("gql.request.complexity.calculated", 1),
+					},
+				},
 			},
 		},
 		{
@@ -215,7 +236,14 @@ func TestTracer(t *testing.T) {
 						attribute.Bool("gql.resolver.is_method", true),
 						attribute.Bool("gql.resolver.is_resolver", true),
 					}},
-				{Name: "anonymous-op", SpanKind: trace.SpanKindServer},
+				{
+					Name:     "anonymous-op",
+					SpanKind: trace.SpanKindServer,
+					Attributes: []attribute.KeyValue{
+						attribute.Int("gql.request.complexity.limit", 1000),
+						attribute.Int("gql.request.complexity.calculated", 1),
+					},
+				},
 			},
 		},
 	}
@@ -232,6 +260,7 @@ func TestTracer(t *testing.T) {
 			gqlsrv.AddTransport(transport.POST{})
 			gqlsrv.Use(extension.AutomaticPersistedQuery{Cache: graphql.NoCache{}})
 			gqlsrv.Use(otelgqlgen.New(otelgqlgen.WithTracerProvider(tp)))
+			gqlsrv.Use(extension.FixedComplexityLimit(1000))
 			srv := httptest.NewServer(gqlsrv)
 			defer srv.Close()
 			body, err := json.Marshal(tc.params)
