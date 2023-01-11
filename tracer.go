@@ -101,14 +101,14 @@ func (t Tracer) InterceptResponse(ctx context.Context, next graphql.ResponseHand
 	}
 	if stats := extension.GetApqStats(ctx); stats != nil {
 		attrs = append(attrs,
-			attribute.String(apqPrefix.With("hash").Encode(), stats.Hash),
-			attribute.Bool(apqPrefix.With("sent_query").Encode(), stats.SentQuery),
+			keyAPQHash.String(stats.Hash),
+			keyAPQSendQuery.Bool(stats.SentQuery),
 		)
 	}
 	if stats, ok := opCtx.Stats.GetExtension(t.complexityExtensionName).(*extension.ComplexityStats); stats != nil && ok {
 		attrs = append(attrs,
-			attribute.Int(complexityPrefix.With("limit").Encode(), stats.ComplexityLimit),
-			attribute.Int(complexityPrefix.With("calculated").Encode(), stats.Complexity),
+			keyComplexityLimit.Int(stats.ComplexityLimit),
+			keyComplexityCalculated.Int(stats.Complexity),
 		)
 	}
 	span.SetAttributes(attrs...)
@@ -147,11 +147,11 @@ func (t Tracer) InterceptField(ctx context.Context, next graphql.Resolver) (any,
 	}
 
 	attrs := attrsField(field)
-	attrs = append(attrs, attrPath(fieldCtx.Path().String()))
+	attrs = append(attrs, keyResolverPath.String(fieldCtx.Path().String()))
 	span.SetAttributes(attrs...)
 	span.SetAttributes(
-		attribute.Bool(resolverPrefix.With("is_method").Encode(), fieldCtx.IsMethod),
-		attribute.Bool(resolverPrefix.With("is_resolver").Encode(), fieldCtx.IsResolver),
+		keyFieldIsMethod.Bool(fieldCtx.IsMethod),
+		keyFieldIsResolver.Bool(fieldCtx.IsResolver),
 	)
 
 	resp, err := next(ctx)
@@ -185,9 +185,9 @@ func attrsField(field graphql.CollectedField) []attribute.KeyValue {
 	max := 3 + len(field.Definition.Arguments)*2
 	attrs := make([]attribute.KeyValue, 0, max)
 	attrs = append(attrs,
-		attrObject(field.ObjectDefinition.Name),
-		attrFieldName(field.Name),
-		attrAlias(field.Alias),
+		keyResolverObject.String(field.ObjectDefinition.Name),
+		keyResolverFieldName.String(field.Name),
+		keyResolverAlias.String(field.Alias),
 	)
 	for _, def := range field.Definition.Arguments {
 		current := argsPrefix.With(def.Name)
@@ -224,34 +224,28 @@ func childAttrs(children ast.ChildValueList, ns attrNameHierarchy) []attribute.K
 	return attrs
 }
 
-func attrObject(v string) attribute.KeyValue {
-	return attribute.String(resolverPrefix.With("object").Encode(), v)
-}
-
-func attrFieldName(v string) attribute.KeyValue {
-	return attribute.String(resolverPrefix.With("field").Encode(), v)
-}
-
-func attrAlias(v string) attribute.KeyValue {
-	return attribute.String(resolverPrefix.With("alias").Encode(), v)
-}
-
-func attrPath(v string) attribute.KeyValue {
-	return attribute.String(resolverPrefix.With("path").Encode(), v)
-}
-
 func attrReqVariable(key string, val any) attribute.KeyValue {
-	return attribute.String(requestPrefix.With("variables", key).Encode(), fmt.Sprintf("%+v", val))
+	return attribute.String(reqVarsPrefix.With(key).Encode(), fmt.Sprintf("%+v", val))
 }
 
 var (
-	attrPrefix       = attrNameHierarchy{"gql"}
-	errPrefix        = attrPrefix.With("errors")
-	resolverPrefix   = attrPrefix.With("resolver")
-	argsPrefix       = resolverPrefix.With("args")
-	requestPrefix    = attrPrefix.With("request")
-	apqPrefix        = requestPrefix.With("apq")
-	complexityPrefix = requestPrefix.With("complexity")
+	ns            = "gql"
+	nsResolver    = ns + ".resolver"
+	nsReq         = ns + ".request"
+	errPrefix     = attrNameHierarchy{ns + ".errors"}
+	argsPrefix    = attrNameHierarchy{nsResolver + ".args"}
+	reqVarsPrefix = attrNameHierarchy{nsReq + ".variables"}
+
+	keyAPQHash              = attribute.Key(nsReq + ".apq.hash")
+	keyAPQSendQuery         = attribute.Key(nsReq + ".apq.sent_query")
+	keyComplexityLimit      = attribute.Key(nsReq + ".complexity.limit")
+	keyComplexityCalculated = attribute.Key(nsReq + ".complexity.calculated")
+	keyResolverObject       = attribute.Key(nsResolver + ".object")
+	keyResolverFieldName    = attribute.Key(nsResolver + ".field")
+	keyResolverAlias        = attribute.Key(nsResolver + ".alias")
+	keyResolverPath         = attribute.Key(nsResolver + ".path")
+	keyFieldIsResolver      = attribute.Key(nsResolver + ".is_resolver")
+	keyFieldIsMethod        = attribute.Key(nsResolver + ".is_method")
 )
 
 type attrNameHierarchy []string
