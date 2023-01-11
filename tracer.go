@@ -171,9 +171,6 @@ func attrsField(field graphql.CollectedField) []attribute.KeyValue {
 	)
 	for _, def := range field.Definition.Arguments {
 		current := argsPrefix.With(def.Name)
-		if def.DefaultValue != nil && len(def.DefaultValue.Children) > 0 {
-			attrs = append(attrs, childAttrs(def.DefaultValue.Children, current)...)
-		}
 		if arg := field.Arguments.ForName(def.Name); arg != nil {
 			if arg.Value != nil && len(arg.Value.Children) > 0 {
 				attrs = append(attrs, childAttrs(arg.Value.Children, current)...)
@@ -183,12 +180,12 @@ func attrsField(field graphql.CollectedField) []attribute.KeyValue {
 				)
 			}
 		} else {
-			attrs = append(attrs, attribute.Bool(current.With("default").Encode(), true))
 			if def.DefaultValue != nil && len(def.DefaultValue.Children) > 0 {
 				attrs = append(attrs, childAttrs(def.DefaultValue.Children, current)...)
 			} else {
 				attrs = append(attrs, attribute.Stringer(current.Encode(), def.DefaultValue))
 			}
+			attrs = append(attrs, attribute.Bool(current.With("default").Encode(), true))
 		}
 	}
 	return attrs
