@@ -17,7 +17,8 @@ func (r *queryResolver) User(ctx context.Context, name string) (*model.User, err
 	if name == "forbidden" {
 		return nil, errors.New("forbidden")
 	}
-	return &model.User{Name: name}, nil
+	age := 17
+	return &model.User{Name: name, Age: &age}, nil
 }
 
 // Root is the resolver for the root field.
@@ -25,7 +26,28 @@ func (r *queryResolver) Root(ctx context.Context, num *int, rootInput *model.Roo
 	return true, nil
 }
 
+// Name is the resolver for the name field.
+func (r *userResolver) Name(ctx context.Context, obj *model.User) (string, error) {
+	if obj.Name == "invalid" {
+		return "", errors.New("invalid name")
+	}
+	return obj.Name, nil
+}
+
+// Age is the resolver for the age field.
+func (r *userResolver) Age(ctx context.Context, obj *model.User) (*int, error) {
+	if obj.Name == "invalid" {
+		return nil, errors.New("invalid age")
+	}
+	age := 17
+	return &age, nil
+}
+
 // Query returns es.QueryResolver implementation.
 func (r *Resolver) Query() es.QueryResolver { return &queryResolver{r} }
 
+// User returns es.UserResolver implementation.
+func (r *Resolver) User() es.UserResolver { return &userResolver{r} }
+
 type queryResolver struct{ *Resolver }
+type userResolver struct{ *Resolver }

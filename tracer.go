@@ -3,7 +3,6 @@ package otelgqlgen
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -171,11 +170,9 @@ func operationName(ctx context.Context) string {
 
 func recordGQLErrors(span trace.Span, errs gqlerror.List) {
 	span.SetStatus(codes.Error, errs.Error())
-	for i, e := range errs {
-		ns := errPrefix.With(strconv.Itoa(i))
+	for _, e := range errs {
 		attrs := []attribute.KeyValue{
-			ns.With("message").asKey().String(e.Message),
-			ns.With("path").asKey().String(e.Path.String()),
+			keyErrorPath.String(e.Path.String()),
 		}
 		span.RecordError(e, trace.WithStackTrace(true), trace.WithAttributes(attrs...))
 	}
@@ -244,7 +241,6 @@ var (
 	ns              = "gql"
 	nsResolver      = ns + ".resolver"
 	nsReq           = ns + ".request"
-	errPrefix       = attrNameHierarchy{ns + ".errors"}
 	directivePrefix = attrNameHierarchy{nsResolver + ".directives"}
 	argsPrefix      = attrNameHierarchy{nsResolver + ".args"}
 	reqVarsPrefix   = attrNameHierarchy{nsReq + ".variables"}
@@ -259,6 +255,7 @@ var (
 	keyResolverPath         = attribute.Key(nsResolver + ".path")
 	keyFieldIsResolver      = attribute.Key(nsResolver + ".is_resolver")
 	keyFieldIsMethod        = attribute.Key(nsResolver + ".is_method")
+	keyErrorPath            = attribute.Key(ns + ".errors.path")
 )
 
 type attrNameHierarchy []string

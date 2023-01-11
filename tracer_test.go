@@ -71,8 +71,8 @@ func TestTracer(t *testing.T) {
 						attribute.String("gql.resolver.directives.include.location", "FIELD"),
 						attribute.String("gql.resolver.directives.include.args.if", "true"),
 						attribute.String("gql.resolver.path", "user.name"),
-						attribute.Bool("gql.resolver.is_method", false),
-						attribute.Bool("gql.resolver.is_resolver", false),
+						attribute.Bool("gql.resolver.is_method", true),
+						attribute.Bool("gql.resolver.is_resolver", true),
 					}},
 				{
 					Name:     "anonymous-op",
@@ -121,8 +121,8 @@ func TestTracer(t *testing.T) {
 						attribute.String("gql.resolver.field", "name"),
 						attribute.String("gql.resolver.alias", "name"),
 						attribute.String("gql.resolver.path", "user.name"),
-						attribute.Bool("gql.resolver.is_method", false),
-						attribute.Bool("gql.resolver.is_resolver", false),
+						attribute.Bool("gql.resolver.is_method", true),
+						attribute.Bool("gql.resolver.is_resolver", true),
 					}},
 				{
 					Name:     "anonymous-op",
@@ -172,10 +172,87 @@ func TestTracer(t *testing.T) {
 						{
 							Name: semconv.ExceptionEventName,
 							Attributes: []attribute.KeyValue{
-								attribute.String("gql.errors.0.message", "forbidden"),
-								attribute.String("gql.errors.0.path", "user"),
+								attribute.String("gql.errors.path", "user"),
 								semconv.ExceptionTypeKey.String("*gqlerror.Error"),
 								semconv.ExceptionMessageKey.String("input: user forbidden"),
+								attrStacktrace,
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "error from edge fields",
+			params: &graphql.RawParams{
+				Query:     `query($name: String!) {user(name: $name) {name age}}`,
+				Variables: map[string]any{"name": "invalid"},
+			},
+			spans: tracetest.SpanStubs{
+				{Name: "parsing", SpanKind: trace.SpanKindServer},
+				{Name: "read", SpanKind: trace.SpanKindServer},
+				{Name: "validation", SpanKind: trace.SpanKindServer},
+				{
+					Name:     "Query/user",
+					SpanKind: trace.SpanKindServer,
+					Attributes: []attribute.KeyValue{
+						attribute.String("gql.resolver.object", "Query"),
+						attribute.String("gql.resolver.field", "user"),
+						attribute.String("gql.resolver.alias", "user"),
+						attribute.String("gql.resolver.args.name", "$name"),
+						attribute.String("gql.resolver.path", "user"),
+						attribute.Bool("gql.resolver.is_method", true),
+						attribute.Bool("gql.resolver.is_resolver", true),
+					}},
+				{
+					Name:     "User/name",
+					SpanKind: trace.SpanKindServer,
+					Attributes: []attribute.KeyValue{
+						attribute.String("gql.resolver.object", "User"),
+						attribute.String("gql.resolver.field", "name"),
+						attribute.String("gql.resolver.alias", "name"),
+						attribute.String("gql.resolver.path", "user.name"),
+						attribute.Bool("gql.resolver.is_method", true),
+						attribute.Bool("gql.resolver.is_resolver", true),
+					},
+				},
+				{
+					Name:     "User/age",
+					SpanKind: trace.SpanKindServer,
+					Attributes: []attribute.KeyValue{
+						attribute.String("gql.resolver.object", "User"),
+						attribute.String("gql.resolver.field", "age"),
+						attribute.String("gql.resolver.alias", "age"),
+						attribute.String("gql.resolver.path", "user.age"),
+						attribute.Bool("gql.resolver.is_method", true),
+						attribute.Bool("gql.resolver.is_resolver", true),
+					},
+				},
+				{
+					Name:     "anonymous-op",
+					SpanKind: trace.SpanKindServer,
+					Status:   sdktrace.Status{Code: codes.Error, Description: "input: user.name invalid name\ninput: user.age invalid age\n"},
+					Attributes: []attribute.KeyValue{
+						attribute.String("gql.request.variables.name", "invalid"),
+						attribute.Int("gql.request.complexity.limit", 1000),
+						attribute.Int("gql.request.complexity.calculated", 3),
+					},
+					Events: []sdktrace.Event{
+						{
+							Name: semconv.ExceptionEventName,
+							Attributes: []attribute.KeyValue{
+								attribute.String("gql.errors.path", "user.name"),
+								semconv.ExceptionTypeKey.String("*gqlerror.Error"),
+								semconv.ExceptionMessageKey.String("input: user.name invalid name"),
+								attrStacktrace,
+							},
+						},
+						{
+							Name: semconv.ExceptionEventName,
+							Attributes: []attribute.KeyValue{
+								attribute.String("gql.errors.path", "user.age"),
+								semconv.ExceptionTypeKey.String("*gqlerror.Error"),
+								semconv.ExceptionMessageKey.String("input: user.age invalid age"),
 								attrStacktrace,
 							},
 						},

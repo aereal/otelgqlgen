@@ -31,6 +31,7 @@ type Config struct {
 
 type ResolverRoot interface {
 	Query() QueryResolver
+	User() UserResolver
 }
 
 type DirectiveRoot struct {
@@ -156,9 +157,14 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 }
 
 var sources = []*ast.Source{
-	{Name: "../../main.gql", Input: `type User {
-  name: String!
-  age: Int
+	{Name: "../../main.gql", Input: `directive @goField(
+	forceResolver: Boolean
+	name: String
+) on INPUT_FIELD_DEFINITION | FIELD_DEFINITION
+
+type User {
+  name: String! @goField(forceResolver: true)
+  age: Int @goField(forceResolver: true)
 }
 
 input NestedInput {
