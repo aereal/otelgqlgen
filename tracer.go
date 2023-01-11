@@ -174,8 +174,8 @@ func recordGQLErrors(span trace.Span, errs gqlerror.List) {
 	for i, e := range errs {
 		ns := errPrefix.With(strconv.Itoa(i))
 		attrs := []attribute.KeyValue{
-			attribute.String(ns.With("message").Encode(), e.Message),
-			attribute.Stringer(ns.With("path").Encode(), e.Path),
+			ns.With("message").asKey().String(e.Message),
+			ns.With("path").asKey().String(e.Path.String()),
 		}
 		span.RecordError(e, trace.WithStackTrace(true), trace.WithAttributes(attrs...))
 	}
@@ -191,13 +191,13 @@ func attrsField(field graphql.CollectedField) []attribute.KeyValue {
 	)
 	for _, directive := range field.Directives {
 		ns := directivePrefix.With(directive.Name)
-		attrs = append(attrs, attribute.String(ns.With("location").Encode(), string(directive.Location)))
+		attrs = append(attrs, ns.With("location").asKey().String(string(directive.Location)))
 		for _, arg := range directive.Arguments {
 			current := ns.With("args", arg.Name)
 			if len(arg.Value.Children) > 0 {
 				attrs = append(attrs, childAttrs(arg.Value.Children, current)...)
 			} else {
-				attrs = append(attrs, attribute.Stringer(current.Encode(), arg.Value))
+				attrs = append(attrs, current.asKey().String(arg.Value.String()))
 			}
 		}
 	}
@@ -208,16 +208,16 @@ func attrsField(field graphql.CollectedField) []attribute.KeyValue {
 				attrs = append(attrs, childAttrs(arg.Value.Children, current)...)
 			} else {
 				attrs = append(attrs,
-					attribute.Stringer(argsPrefix.With(arg.Name).Encode(), arg.Value),
+					argsPrefix.With(arg.Name).asKey().String(arg.Value.String()),
 				)
 			}
 		} else {
 			if def.DefaultValue != nil && len(def.DefaultValue.Children) > 0 {
 				attrs = append(attrs, childAttrs(def.DefaultValue.Children, current)...)
 			} else {
-				attrs = append(attrs, attribute.Stringer(current.Encode(), def.DefaultValue))
+				attrs = append(attrs, current.asKey().String(def.DefaultValue.String()))
 			}
-			attrs = append(attrs, attribute.Bool(current.With("default").Encode(), true))
+			attrs = append(attrs, current.With("default").asKey().Bool(true))
 		}
 	}
 	return attrs
@@ -230,14 +230,14 @@ func childAttrs(children ast.ChildValueList, ns attrNameHierarchy) []attribute.K
 		if len(child.Value.Children) > 0 {
 			attrs = append(attrs, childAttrs(child.Value.Children, current)...)
 		} else {
-			attrs = append(attrs, attribute.Stringer(current.Encode(), child.Value))
+			attrs = append(attrs, current.asKey().String(child.Value.String()))
 		}
 	}
 	return attrs
 }
 
 func attrReqVariable(key string, val any) attribute.KeyValue {
-	return attribute.String(reqVarsPrefix.With(key).Encode(), fmt.Sprintf("%+v", val))
+	return reqVarsPrefix.With(key).asKey().String(fmt.Sprintf("%+v", val))
 }
 
 var (
@@ -263,8 +263,8 @@ var (
 
 type attrNameHierarchy []string
 
-func (ns attrNameHierarchy) Encode() string {
-	return strings.Join(ns, ".")
+func (ns attrNameHierarchy) asKey() attribute.Key {
+	return attribute.Key(strings.Join(ns, "."))
 }
 
 func (ns attrNameHierarchy) With(parts ...string) attrNameHierarchy {
