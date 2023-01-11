@@ -182,13 +182,25 @@ func recordGQLErrors(span trace.Span, errs gqlerror.List) {
 }
 
 func attrsField(field graphql.CollectedField) []attribute.KeyValue {
-	max := 3 + len(field.Definition.Arguments)*2
+	max := 3 + len(field.Definition.Arguments)*2 + len(field.Directives)*2
 	attrs := make([]attribute.KeyValue, 0, max)
 	attrs = append(attrs,
 		keyResolverObject.String(field.ObjectDefinition.Name),
 		keyResolverFieldName.String(field.Name),
 		keyResolverAlias.String(field.Alias),
 	)
+	for _, directive := range field.Directives {
+		ns := directivePrefix.With(directive.Name)
+		attrs = append(attrs, attribute.String(ns.With("location").Encode(), string(directive.Location)))
+		for _, arg := range directive.Arguments {
+			current := ns.With("args", arg.Name)
+			if len(arg.Value.Children) > 0 {
+				attrs = append(attrs, childAttrs(arg.Value.Children, current)...)
+			} else {
+				attrs = append(attrs, attribute.Stringer(current.Encode(), arg.Value))
+			}
+		}
+	}
 	for _, def := range field.Definition.Arguments {
 		current := argsPrefix.With(def.Name)
 		if arg := field.Arguments.ForName(def.Name); arg != nil {
@@ -229,12 +241,13 @@ func attrReqVariable(key string, val any) attribute.KeyValue {
 }
 
 var (
-	ns            = "gql"
-	nsResolver    = ns + ".resolver"
-	nsReq         = ns + ".request"
-	errPrefix     = attrNameHierarchy{ns + ".errors"}
-	argsPrefix    = attrNameHierarchy{nsResolver + ".args"}
-	reqVarsPrefix = attrNameHierarchy{nsReq + ".variables"}
+	ns              = "gql"
+	nsResolver      = ns + ".resolver"
+	nsReq           = ns + ".request"
+	errPrefix       = attrNameHierarchy{ns + ".errors"}
+	directivePrefix = attrNameHierarchy{nsResolver + ".directives"}
+	argsPrefix      = attrNameHierarchy{nsResolver + ".args"}
+	reqVarsPrefix   = attrNameHierarchy{nsReq + ".variables"}
 
 	keyAPQHash              = attribute.Key(nsReq + ".apq.hash")
 	keyAPQSendQuery         = attribute.Key(nsReq + ".apq.sent_query")

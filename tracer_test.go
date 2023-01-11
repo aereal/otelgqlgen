@@ -40,7 +40,7 @@ func TestTracer(t *testing.T) {
 		{
 			name: "ok",
 			params: &graphql.RawParams{
-				Query:     `query($name: String!) {user(name: $name) {name}}`,
+				Query:     `query($name: String!) {user(name: $name) @include(if: true) {name @include(if: true)}}`,
 				Variables: map[string]any{"name": "aereal"},
 			},
 			spans: tracetest.SpanStubs{
@@ -54,6 +54,8 @@ func TestTracer(t *testing.T) {
 						attribute.String("gql.resolver.object", "Query"),
 						attribute.String("gql.resolver.field", "user"),
 						attribute.String("gql.resolver.alias", "user"),
+						attribute.String("gql.resolver.directives.include.location", "FIELD"),
+						attribute.String("gql.resolver.directives.include.args.if", "true"),
 						attribute.String("gql.resolver.args.name", "$name"),
 						attribute.String("gql.resolver.path", "user"),
 						attribute.Bool("gql.resolver.is_method", true),
@@ -66,6 +68,8 @@ func TestTracer(t *testing.T) {
 						attribute.String("gql.resolver.object", "User"),
 						attribute.String("gql.resolver.field", "name"),
 						attribute.String("gql.resolver.alias", "name"),
+						attribute.String("gql.resolver.directives.include.location", "FIELD"),
+						attribute.String("gql.resolver.directives.include.args.if", "true"),
 						attribute.String("gql.resolver.path", "user.name"),
 						attribute.Bool("gql.resolver.is_method", false),
 						attribute.Bool("gql.resolver.is_resolver", false),
