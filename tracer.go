@@ -157,7 +157,10 @@ func (t Tracer) InterceptField(ctx context.Context, next graphql.Resolver) (any,
 	)
 
 	resp, err := next(ctx)
-	if errs := graphql.GetFieldErrors(ctx, fieldCtx); len(errs) > 0 {
+	if err != nil {
+		span.SetStatus(codes.Error, err.Error())
+	}
+	if errs := graphql.GetFieldErrors(ctx, graphql.GetFieldContext(ctx)); len(errs) > 0 {
 		recordGQLErrors(span, errs)
 	}
 	return resp, err
