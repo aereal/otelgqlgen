@@ -18,7 +18,7 @@ import (
 
 const (
 	extensionName                  = "CustomOpenTelemetryTracer"
-	tracerName                     = "github.com/aereal/otel-gqlgen"
+	tracerName                     = "github.com/aereal/otelgqlgen"
 	anonymousOpName                = "anonymous-op"
 	defaultComplexityExtensionName = "ComplexityLimit"
 )
