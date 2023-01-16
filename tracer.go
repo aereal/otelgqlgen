@@ -45,7 +45,7 @@ func WithComplexityLimitExtensionName(extName string) Option {
 }
 
 // New returns a new Tracer with given options.
-func New(opts ...Option) Tracer {
+func New(opts ...Option) *Tracer {
 	cfg := &config{}
 	for _, o := range opts {
 		o(cfg)
@@ -53,7 +53,7 @@ func New(opts ...Option) Tracer {
 	if cfg.tracerProvider == nil {
 		cfg.tracerProvider = otel.GetTracerProvider()
 	}
-	t := Tracer{
+	t := &Tracer{
 		tracer:                  cfg.tracerProvider.Tracer(tracerName, trace.WithInstrumentationVersion(contrib.SemVersion())),
 		complexityExtensionName: cfg.complexityExtensionName,
 	}
@@ -67,23 +67,25 @@ func New(opts ...Option) Tracer {
 type Tracer struct {
 	tracer                  trace.Tracer
 	complexityExtensionName string
+	es                      graphql.ExecutableSchema
 }
 
 var _ interface {
 	graphql.HandlerExtension
 	graphql.ResponseInterceptor
 	graphql.FieldInterceptor
-} = Tracer{}
+} = (*Tracer)(nil)
 
 func (Tracer) ExtensionName() string {
 	return extensionName
 }
 
-func (Tracer) Validate(_ graphql.ExecutableSchema) error {
+func (t *Tracer) Validate(es graphql.ExecutableSchema) error {
+	t.es = es
 	return nil
 }
 
-func (t Tracer) InterceptResponse(ctx context.Context, next graphql.ResponseHandler) *graphql.Response {
+func (t *Tracer) InterceptResponse(ctx context.Context, next graphql.ResponseHandler) *graphql.Response {
 	opCtx := graphql.GetOperationContext(ctx)
 	opts := make([]trace.SpanStartOption, 0, 2)
 	opts = append(opts, trace.WithSpanKind(trace.SpanKindServer))
@@ -121,7 +123,7 @@ func (t Tracer) InterceptResponse(ctx context.Context, next graphql.ResponseHand
 	return resp
 }
 
-func (t Tracer) captureOperationTimings(ctx context.Context) {
+func (t *Tracer) captureOperationTimings(ctx context.Context) {
 	stats := graphql.GetOperationContext(ctx).Stats
 	var (
 		timing graphql.TraceTiming
@@ -151,7 +153,7 @@ func fieldSpanName(fc *graphql.FieldContext) string {
 	return w.String()
 }
 
-func (t Tracer) InterceptField(ctx context.Context, next graphql.Resolver) (any, error) {
+func (t *Tracer) InterceptField(ctx context.Context, next graphql.Resolver) (any, error) {
 	fieldCtx := graphql.GetFieldContext(ctx)
 	field := fieldCtx.Field
 	ctx, span := t.tracer.Start(ctx, fieldSpanName(fieldCtx), trace.WithSpanKind(trace.SpanKindServer))
@@ -166,6 +168,9 @@ func (t Tracer) InterceptField(ctx context.Context, next graphql.Resolver) (any,
 		keyFieldIsMethod.Bool(fieldCtx.IsMethod),
 		keyFieldIsResolver.Bool(fieldCtx.IsResolver),
 	)
+	if complexity, ok := t.es.Complexity(fieldCtx.Object, fieldCtx.Field.Name, 1, fieldCtx.Args); ok {
+		attrs = append(attrs, keyFieldComplexityCalculated.Int(complexity))
+	}
 	span.SetAttributes(attrs...)
 
 	resp, err := next(ctx)
@@ -260,17 +265,18 @@ var (
 	argsPrefix      = attrNameHierarchy{nsResolver + ".args"}
 	reqVarsPrefix   = attrNameHierarchy{nsReq + ".variables"}
 
-	keyAPQHash              = attribute.Key(nsReq + ".apq.hash")
-	keyAPQSendQuery         = attribute.Key(nsReq + ".apq.sent_query")
-	keyComplexityLimit      = attribute.Key(nsReq + ".complexity.limit")
-	keyComplexityCalculated = attribute.Key(nsReq + ".complexity.calculated")
-	keyResolverObject       = attribute.Key(nsResolver + ".object")
-	keyResolverFieldName    = attribute.Key(nsResolver + ".field")
-	keyResolverAlias        = attribute.Key(nsResolver + ".alias")
-	keyResolverPath         = attribute.Key(nsResolver + ".path")
-	keyFieldIsResolver      = attribute.Key(nsResolver + ".is_resolver")
-	keyFieldIsMethod        = attribute.Key(nsResolver + ".is_method")
-	keyErrorPath            = attribute.Key(ns + ".errors.path")
+	keyAPQHash                   = attribute.Key(nsReq + ".apq.hash")
+	keyAPQSendQuery              = attribute.Key(nsReq + ".apq.sent_query")
+	keyComplexityLimit           = attribute.Key(nsReq + ".complexity.limit")
+	keyComplexityCalculated      = attribute.Key(nsReq + ".complexity.calculated")
+	keyResolverObject            = attribute.Key(nsResolver + ".object")
+	keyResolverFieldName         = attribute.Key(nsResolver + ".field")
+	keyResolverAlias             = attribute.Key(nsResolver + ".alias")
+	keyResolverPath              = attribute.Key(nsResolver + ".path")
+	keyFieldIsResolver           = attribute.Key(nsResolver + ".is_resolver")
+	keyFieldIsMethod             = attribute.Key(nsResolver + ".is_method")
+	keyFieldComplexityCalculated = attribute.Key(nsResolver + ".complexity.calculated")
+	keyErrorPath                 = attribute.Key(ns + ".errors.path")
 )
 
 type attrNameHierarchy []string
