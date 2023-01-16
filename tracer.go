@@ -18,7 +18,7 @@ import (
 
 const (
 	extensionName                  = "CustomOpenTelemetryTracer"
-	tracerName                     = "github.com/aereal/otel-gqlgen"
+	tracerName                     = "github.com/aereal/otelgqlgen"
 	anonymousOpName                = "anonymous-op"
 	defaultComplexityExtensionName = "ComplexityLimit"
 )
@@ -30,6 +30,7 @@ type config struct {
 
 type Option func(c *config)
 
+// WithTracerProvider creates an Optoin that tells Tracer to use given TracerProvider.
 func WithTracerProvider(tp trace.TracerProvider) Option {
 	return func(c *config) {
 		c.tracerProvider = tp
@@ -43,6 +44,7 @@ func WithComplexityLimitExtensionName(extName string) Option {
 	}
 }
 
+// New returns a new Tracer with given options.
 func New(opts ...Option) Tracer {
 	cfg := &config{}
 	for _, o := range opts {
@@ -61,6 +63,7 @@ func New(opts ...Option) Tracer {
 	return t
 }
 
+// Tracer is a gqlgen extension to collect traces from the resolver.
 type Tracer struct {
 	tracer                  trace.Tracer
 	complexityExtensionName string
