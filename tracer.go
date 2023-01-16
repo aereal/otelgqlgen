@@ -161,12 +161,12 @@ func (t Tracer) InterceptField(ctx context.Context, next graphql.Resolver) (any,
 	}
 
 	attrs := attrsField(field)
-	attrs = append(attrs, keyResolverPath.String(fieldCtx.Path().String()))
-	span.SetAttributes(attrs...)
-	span.SetAttributes(
+	attrs = append(attrs,
+		keyResolverPath.String(fieldCtx.Path().String()),
 		keyFieldIsMethod.Bool(fieldCtx.IsMethod),
 		keyFieldIsResolver.Bool(fieldCtx.IsResolver),
 	)
+	span.SetAttributes(attrs...)
 
 	resp, err := next(ctx)
 	if errs := graphql.GetFieldErrors(ctx, fieldCtx); len(errs) > 0 {
