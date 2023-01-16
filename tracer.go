@@ -138,11 +138,23 @@ func (t Tracer) captureOperationTimings(ctx context.Context) {
 	span.End(trace.WithTimestamp(timing.End))
 }
 
+func fieldSpanName(fc *graphql.FieldContext) string {
+	w := &strings.Builder{}
+	fmt.Fprint(w, fc.Field.ObjectDefinition.Name)
+	if fc.Parent != nil && fc.Parent.Index != nil {
+		fmt.Fprintf(w, "/%d", *fc.Parent.Index)
+	}
+	fmt.Fprintf(w, "/%s", fc.Field.Name)
+	if fc.Index != nil {
+		fmt.Fprintf(w, "/%d", *fc.Index)
+	}
+	return w.String()
+}
+
 func (t Tracer) InterceptField(ctx context.Context, next graphql.Resolver) (any, error) {
 	fieldCtx := graphql.GetFieldContext(ctx)
 	field := fieldCtx.Field
-	spanName := fmt.Sprintf("%s/%s", field.ObjectDefinition.Name, field.Name)
-	ctx, span := t.tracer.Start(ctx, spanName, trace.WithSpanKind(trace.SpanKindServer))
+	ctx, span := t.tracer.Start(ctx, fieldSpanName(fieldCtx), trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 	if !span.IsRecording() {
 		return next(ctx)
