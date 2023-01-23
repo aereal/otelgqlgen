@@ -79,9 +79,9 @@ func TestTracer(t *testing.T) {
 					Name:     "anonymous-op",
 					SpanKind: trace.SpanKindServer,
 					Attributes: []attribute.KeyValue{
-						attribute.String("graphql.request.variables.name", "aereal"),
-						attribute.Int("graphql.request.complexity.limit", 1000),
-						attribute.Int("graphql.request.complexity.calculated", 3),
+						attribute.String("graphql.operation.variables.name", "aereal"),
+						attribute.Int("graphql.operation.complexity.limit", 1000),
+						attribute.Int("graphql.operation.complexity.calculated", 3),
 					},
 				},
 			},
@@ -129,11 +129,11 @@ func TestTracer(t *testing.T) {
 					Name:     "anonymous-op",
 					SpanKind: trace.SpanKindServer,
 					Attributes: []attribute.KeyValue{
-						attribute.String("graphql.request.variables.name", "aereal"),
-						attribute.String("graphql.request.apq.hash", "bb1d493f173860f391c0358319c3a6b88c230c7bc5af8084c4082f45deb85437"),
-						attribute.Bool("graphql.request.apq.sent_query", true),
-						attribute.Int("graphql.request.complexity.limit", 1000),
-						attribute.Int("graphql.request.complexity.calculated", 3),
+						attribute.String("graphql.operation.variables.name", "aereal"),
+						attribute.String("graphql.operation.apq.hash", "bb1d493f173860f391c0358319c3a6b88c230c7bc5af8084c4082f45deb85437"),
+						attribute.Bool("graphql.operation.apq.sent_query", true),
+						attribute.Int("graphql.operation.complexity.limit", 1000),
+						attribute.Int("graphql.operation.complexity.calculated", 3),
 					},
 				},
 			},
@@ -165,9 +165,9 @@ func TestTracer(t *testing.T) {
 					SpanKind: trace.SpanKindServer,
 					Status:   sdktrace.Status{Code: codes.Error, Description: "input: user forbidden\n"},
 					Attributes: []attribute.KeyValue{
-						attribute.String("graphql.request.variables.name", "forbidden"),
-						attribute.Int("graphql.request.complexity.limit", 1000),
-						attribute.Int("graphql.request.complexity.calculated", 3),
+						attribute.String("graphql.operation.variables.name", "forbidden"),
+						attribute.Int("graphql.operation.complexity.limit", 1000),
+						attribute.Int("graphql.operation.complexity.calculated", 3),
 					},
 					Events: []sdktrace.Event{
 						{
@@ -234,9 +234,9 @@ func TestTracer(t *testing.T) {
 					SpanKind: trace.SpanKindServer,
 					Status:   sdktrace.Status{Code: codes.Error, Description: "input: user.name invalid name\ninput: user.age invalid age\n"},
 					Attributes: []attribute.KeyValue{
-						attribute.String("graphql.request.variables.name", "invalid"),
-						attribute.Int("graphql.request.complexity.limit", 1000),
-						attribute.Int("graphql.request.complexity.calculated", 4),
+						attribute.String("graphql.operation.variables.name", "invalid"),
+						attribute.Int("graphql.operation.complexity.limit", 1000),
+						attribute.Int("graphql.operation.complexity.calculated", 4),
 					},
 					Events: []sdktrace.Event{
 						{
@@ -289,8 +289,8 @@ func TestTracer(t *testing.T) {
 					Name:     "anonymous-op",
 					SpanKind: trace.SpanKindServer,
 					Attributes: []attribute.KeyValue{
-						attribute.Int("graphql.request.complexity.limit", 1000),
-						attribute.Int("graphql.request.complexity.calculated", 1),
+						attribute.Int("graphql.operation.complexity.limit", 1000),
+						attribute.Int("graphql.operation.complexity.calculated", 1),
 					},
 				},
 			},
@@ -322,8 +322,8 @@ func TestTracer(t *testing.T) {
 					Name:     "anonymous-op",
 					SpanKind: trace.SpanKindServer,
 					Attributes: []attribute.KeyValue{
-						attribute.Int("graphql.request.complexity.limit", 1000),
-						attribute.Int("graphql.request.complexity.calculated", 1),
+						attribute.Int("graphql.operation.complexity.limit", 1000),
+						attribute.Int("graphql.operation.complexity.calculated", 1),
 					},
 				},
 			},
@@ -381,9 +381,9 @@ func TestTracer(t *testing.T) {
 					Name:     "anonymous-op",
 					SpanKind: trace.SpanKindServer,
 					Attributes: []attribute.KeyValue{
-						attribute.String("graphql.request.variables.name", "aereal"),
-						attribute.Int("graphql.request.complexity.limit", 1000),
-						attribute.Int("graphql.request.complexity.calculated", 3),
+						attribute.String("graphql.operation.variables.name", "aereal"),
+						attribute.Int("graphql.operation.complexity.limit", 1000),
+						attribute.Int("graphql.operation.complexity.calculated", 3),
 					},
 				},
 			},
