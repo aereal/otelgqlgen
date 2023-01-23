@@ -2,8 +2,6 @@ package otelgqlgen
 
 import (
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
 	"fmt"
 	"strings"
 
@@ -111,12 +109,6 @@ func (t Tracer) InterceptResponse(ctx context.Context, next graphql.ResponseHand
 		return next(ctx)
 	}
 	t.captureOperationTimings(ctx)
-
-	if false {
-		b := sha256.Sum256([]byte(opCtx.RawQuery))
-		sum := hex.EncodeToString(b[:])
-		fmt.Printf("spanID=%q sha256=%q\n", span.SpanContext().SpanID(), sum)
-	}
 
 	attrs := make([]attribute.KeyValue, 0, len(opCtx.Variables)+2+2)
 	for k, v := range opCtx.Variables {
