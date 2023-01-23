@@ -12,6 +12,11 @@ import (
 	"github.com/aereal/otelgqlgen/internal/model"
 )
 
+// RegisterUser is the resolver for the registerUser field.
+func (r *mutationResolver) RegisterUser(ctx context.Context, name string) (bool, error) {
+	return true, nil
+}
+
 // User is the resolver for the user field.
 func (r *queryResolver) User(ctx context.Context, name string) (*model.User, error) {
 	if name == "forbidden" {
@@ -43,11 +48,15 @@ func (r *userResolver) Age(ctx context.Context, obj *model.User) (*int, error) {
 	return &age, nil
 }
 
+// Mutation returns es.MutationResolver implementation.
+func (r *Resolver) Mutation() es.MutationResolver { return &mutationResolver{r} }
+
 // Query returns es.QueryResolver implementation.
 func (r *Resolver) Query() es.QueryResolver { return &queryResolver{r} }
 
 // User returns es.UserResolver implementation.
 func (r *Resolver) User() es.UserResolver { return &userResolver{r} }
 
+type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
 type userResolver struct{ *Resolver }

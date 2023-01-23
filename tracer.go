@@ -100,7 +100,9 @@ func (t Tracer) InterceptResponse(ctx context.Context, next graphql.ResponseHand
 	opCtx := graphql.GetOperationContext(ctx)
 	name := operationName(ctx)
 	opts := make([]trace.SpanStartOption, 0, 3)
-	opts = append(opts, trace.WithSpanKind(trace.SpanKindServer), trace.WithAttributes(keyOpName.String(name)))
+	opts = append(opts,
+		trace.WithSpanKind(trace.SpanKindServer),
+		trace.WithAttributes(keyOpName.String(name), keyOpType.String(string(opCtx.Operation.Operation))))
 	if !opCtx.Stats.OperationStart.IsZero() {
 		opts = append(opts, trace.WithTimestamp(opCtx.Stats.OperationStart))
 	}
@@ -197,6 +199,9 @@ func operationName(ctx context.Context) string {
 	if name := opCtx.OperationName; name != "" {
 		return name
 	}
+	if op := opCtx.Operation; op != nil && op.Name != "" {
+		return op.Name
+	}
 	return string(opCtx.Operation.Operation)
 }
 
@@ -278,6 +283,7 @@ var (
 	reqVarsPrefix   = attrNameHierarchy{nsReq + ".variables"}
 
 	keyOpName               = attribute.Key(nsReq + ".name")
+	keyOpType               = attribute.Key(nsReq + ".type")
 	keyAPQHash              = attribute.Key(nsReq + ".apq.hash")
 	keyAPQSendQuery         = attribute.Key(nsReq + ".apq.sent_query")
 	keyComplexityLimit      = attribute.Key(nsReq + ".complexity.limit")

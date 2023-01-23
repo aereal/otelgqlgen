@@ -80,6 +80,108 @@ func TestTracer(t *testing.T) {
 					SpanKind: trace.SpanKindServer,
 					Attributes: []attribute.KeyValue{
 						attribute.String("graphql.operation.name", "query"),
+						attribute.String("graphql.operation.type", "query"),
+						attribute.String("graphql.operation.variables.name", "aereal"),
+						attribute.Int("graphql.operation.complexity.limit", 1000),
+						attribute.Int("graphql.operation.complexity.calculated", 3),
+					},
+				},
+			},
+		},
+		{
+			name: "ok/named",
+			params: &graphql.RawParams{
+				Query:     `query namedOp($name: String!) {user(name: $name) @include(if: true) {name @include(if: true) isAdmin}}`,
+				Variables: map[string]any{"name": "aereal"},
+			},
+			spans: tracetest.SpanStubs{
+				{Name: "parsing", SpanKind: trace.SpanKindServer},
+				{Name: "read", SpanKind: trace.SpanKindServer},
+				{Name: "validation", SpanKind: trace.SpanKindServer},
+				{
+					Name:     "Query/user",
+					SpanKind: trace.SpanKindServer,
+					Attributes: []attribute.KeyValue{
+						attribute.String("graphql.resolver.object", "Query"),
+						attribute.String("graphql.resolver.field", "user"),
+						attribute.String("graphql.resolver.alias", "user"),
+						attribute.String("graphql.resolver.directives.include.location", "FIELD"),
+						attribute.String("graphql.resolver.directives.include.args.if", "true"),
+						attribute.String("graphql.resolver.args.name", "$name"),
+						attribute.String("graphql.resolver.path", "user"),
+						attribute.Bool("graphql.resolver.is_method", true),
+						attribute.Bool("graphql.resolver.is_resolver", true),
+					}},
+				{
+					Name:     "User/name",
+					SpanKind: trace.SpanKindServer,
+					Attributes: []attribute.KeyValue{
+						attribute.String("graphql.resolver.object", "User"),
+						attribute.String("graphql.resolver.field", "name"),
+						attribute.String("graphql.resolver.alias", "name"),
+						attribute.String("graphql.resolver.directives.include.location", "FIELD"),
+						attribute.String("graphql.resolver.directives.include.args.if", "true"),
+						attribute.String("graphql.resolver.path", "user.name"),
+						attribute.Bool("graphql.resolver.is_method", true),
+						attribute.Bool("graphql.resolver.is_resolver", true),
+					}},
+				{
+					Name:     "namedOp",
+					SpanKind: trace.SpanKindServer,
+					Attributes: []attribute.KeyValue{
+						attribute.String("graphql.operation.name", "namedOp"),
+						attribute.String("graphql.operation.type", "query"),
+						attribute.String("graphql.operation.variables.name", "aereal"),
+						attribute.Int("graphql.operation.complexity.limit", 1000),
+						attribute.Int("graphql.operation.complexity.calculated", 3),
+					},
+				},
+			},
+		},
+		{
+			name: "ok/name from parameter",
+			params: &graphql.RawParams{
+				Query:         `query namedOp($name: String!) {user(name: $name) @include(if: true) {name @include(if: true) isAdmin}}`,
+				Variables:     map[string]any{"name": "aereal"},
+				OperationName: "namedOp",
+			},
+			spans: tracetest.SpanStubs{
+				{Name: "parsing", SpanKind: trace.SpanKindServer},
+				{Name: "read", SpanKind: trace.SpanKindServer},
+				{Name: "validation", SpanKind: trace.SpanKindServer},
+				{
+					Name:     "Query/user",
+					SpanKind: trace.SpanKindServer,
+					Attributes: []attribute.KeyValue{
+						attribute.String("graphql.resolver.object", "Query"),
+						attribute.String("graphql.resolver.field", "user"),
+						attribute.String("graphql.resolver.alias", "user"),
+						attribute.String("graphql.resolver.directives.include.location", "FIELD"),
+						attribute.String("graphql.resolver.directives.include.args.if", "true"),
+						attribute.String("graphql.resolver.args.name", "$name"),
+						attribute.String("graphql.resolver.path", "user"),
+						attribute.Bool("graphql.resolver.is_method", true),
+						attribute.Bool("graphql.resolver.is_resolver", true),
+					}},
+				{
+					Name:     "User/name",
+					SpanKind: trace.SpanKindServer,
+					Attributes: []attribute.KeyValue{
+						attribute.String("graphql.resolver.object", "User"),
+						attribute.String("graphql.resolver.field", "name"),
+						attribute.String("graphql.resolver.alias", "name"),
+						attribute.String("graphql.resolver.directives.include.location", "FIELD"),
+						attribute.String("graphql.resolver.directives.include.args.if", "true"),
+						attribute.String("graphql.resolver.path", "user.name"),
+						attribute.Bool("graphql.resolver.is_method", true),
+						attribute.Bool("graphql.resolver.is_resolver", true),
+					}},
+				{
+					Name:     "namedOp",
+					SpanKind: trace.SpanKindServer,
+					Attributes: []attribute.KeyValue{
+						attribute.String("graphql.operation.name", "namedOp"),
+						attribute.String("graphql.operation.type", "query"),
 						attribute.String("graphql.operation.variables.name", "aereal"),
 						attribute.Int("graphql.operation.complexity.limit", 1000),
 						attribute.Int("graphql.operation.complexity.calculated", 3),
@@ -131,6 +233,7 @@ func TestTracer(t *testing.T) {
 					SpanKind: trace.SpanKindServer,
 					Attributes: []attribute.KeyValue{
 						attribute.String("graphql.operation.name", "query"),
+						attribute.String("graphql.operation.type", "query"),
 						attribute.String("graphql.operation.variables.name", "aereal"),
 						attribute.String("graphql.operation.apq.hash", "bb1d493f173860f391c0358319c3a6b88c230c7bc5af8084c4082f45deb85437"),
 						attribute.Bool("graphql.operation.apq.sent_query", true),
@@ -168,6 +271,7 @@ func TestTracer(t *testing.T) {
 					Status:   sdktrace.Status{Code: codes.Error, Description: "input: user forbidden\n"},
 					Attributes: []attribute.KeyValue{
 						attribute.String("graphql.operation.name", "query"),
+						attribute.String("graphql.operation.type", "query"),
 						attribute.String("graphql.operation.variables.name", "forbidden"),
 						attribute.Int("graphql.operation.complexity.limit", 1000),
 						attribute.Int("graphql.operation.complexity.calculated", 3),
@@ -238,6 +342,7 @@ func TestTracer(t *testing.T) {
 					Status:   sdktrace.Status{Code: codes.Error, Description: "input: user.name invalid name\ninput: user.age invalid age\n"},
 					Attributes: []attribute.KeyValue{
 						attribute.String("graphql.operation.name", "query"),
+						attribute.String("graphql.operation.type", "query"),
 						attribute.String("graphql.operation.variables.name", "invalid"),
 						attribute.Int("graphql.operation.complexity.limit", 1000),
 						attribute.Int("graphql.operation.complexity.calculated", 4),
@@ -294,6 +399,7 @@ func TestTracer(t *testing.T) {
 					SpanKind: trace.SpanKindServer,
 					Attributes: []attribute.KeyValue{
 						attribute.String("graphql.operation.name", "query"),
+						attribute.String("graphql.operation.type", "query"),
 						attribute.Int("graphql.operation.complexity.limit", 1000),
 						attribute.Int("graphql.operation.complexity.calculated", 1),
 					},
@@ -328,6 +434,7 @@ func TestTracer(t *testing.T) {
 					SpanKind: trace.SpanKindServer,
 					Attributes: []attribute.KeyValue{
 						attribute.String("graphql.operation.name", "query"),
+						attribute.String("graphql.operation.type", "query"),
 						attribute.Int("graphql.operation.complexity.limit", 1000),
 						attribute.Int("graphql.operation.complexity.calculated", 1),
 					},
@@ -388,9 +495,46 @@ func TestTracer(t *testing.T) {
 					SpanKind: trace.SpanKindServer,
 					Attributes: []attribute.KeyValue{
 						attribute.String("graphql.operation.name", "query"),
+						attribute.String("graphql.operation.type", "query"),
 						attribute.String("graphql.operation.variables.name", "aereal"),
 						attribute.Int("graphql.operation.complexity.limit", 1000),
 						attribute.Int("graphql.operation.complexity.calculated", 3),
+					},
+				},
+			},
+		},
+		{
+			name: "ok/mutation",
+			params: &graphql.RawParams{
+				Query:     `mutation($name: String!) {registerUser(name: $name)}`,
+				Variables: map[string]any{"name": "aereal"},
+			},
+			spans: tracetest.SpanStubs{
+				{Name: "parsing", SpanKind: trace.SpanKindServer},
+				{Name: "read", SpanKind: trace.SpanKindServer},
+				{Name: "validation", SpanKind: trace.SpanKindServer},
+				{
+					Name:     "Mutation/registerUser",
+					SpanKind: trace.SpanKindServer,
+					Attributes: []attribute.KeyValue{
+						attribute.String("graphql.resolver.object", "Mutation"),
+						attribute.String("graphql.resolver.field", "registerUser"),
+						attribute.String("graphql.resolver.alias", "registerUser"),
+						attribute.String("graphql.resolver.args.name", "$name"),
+						attribute.String("graphql.resolver.path", "registerUser"),
+						attribute.Bool("graphql.resolver.is_method", true),
+						attribute.Bool("graphql.resolver.is_resolver", true),
+					},
+				},
+				{
+					Name:     "mutation",
+					SpanKind: trace.SpanKindServer,
+					Attributes: []attribute.KeyValue{
+						attribute.String("graphql.operation.name", "mutation"),
+						attribute.String("graphql.operation.type", "mutation"),
+						attribute.String("graphql.operation.variables.name", "aereal"),
+						attribute.Int("graphql.operation.complexity.limit", 1000),
+						attribute.Int("graphql.operation.complexity.calculated", 1),
 					},
 				},
 			},
