@@ -32,15 +32,16 @@ var (
 
 func TestTracer(t *testing.T) {
 	type testCase struct {
-		name   string
-		params *graphql.RawParams
-		spans  tracetest.SpanStubs
+		name    string
+		params  *graphql.RawParams
+		spans   tracetest.SpanStubs
+		options []otelgqlgen.Option
 	}
 	testCases := []testCase{
 		{
 			name: "ok",
 			params: &graphql.RawParams{
-				Query:     `query($name: String!) {user(name: $name) @include(if: true) {name @include(if: true)}}`,
+				Query:     `query($name: String!) {user(name: $name) @include(if: true) {name @include(if: true) isAdmin}}`,
 				Variables: map[string]any{"name": "aereal"},
 			},
 			spans: tracetest.SpanStubs{
@@ -80,7 +81,7 @@ func TestTracer(t *testing.T) {
 					Attributes: []attribute.KeyValue{
 						attribute.String("gql.request.variables.name", "aereal"),
 						attribute.Int("gql.request.complexity.limit", 1000),
-						attribute.Int("gql.request.complexity.calculated", 2),
+						attribute.Int("gql.request.complexity.calculated", 3),
 					},
 				},
 			},
@@ -88,12 +89,12 @@ func TestTracer(t *testing.T) {
 		{
 			name: "automated persisted query",
 			params: &graphql.RawParams{
-				Query:     `query($name: String!) {user(name: $name) {name}}`,
+				Query:     `query($name: String!) {user(name: $name) {name isAdmin}}`,
 				Variables: map[string]any{"name": "aereal"},
 				Extensions: map[string]any{
 					"persistedQuery": map[string]any{
 						"version":    1,
-						"sha256Hash": "d27e6805f86ffaf5b1c96ad70fe044580f6454a7731b30f0e93494afe25294d6",
+						"sha256Hash": "bb1d493f173860f391c0358319c3a6b88c230c7bc5af8084c4082f45deb85437",
 					},
 				},
 			},
@@ -129,10 +130,10 @@ func TestTracer(t *testing.T) {
 					SpanKind: trace.SpanKindServer,
 					Attributes: []attribute.KeyValue{
 						attribute.String("gql.request.variables.name", "aereal"),
-						attribute.String("gql.request.apq.hash", "d27e6805f86ffaf5b1c96ad70fe044580f6454a7731b30f0e93494afe25294d6"),
+						attribute.String("gql.request.apq.hash", "bb1d493f173860f391c0358319c3a6b88c230c7bc5af8084c4082f45deb85437"),
 						attribute.Bool("gql.request.apq.sent_query", true),
 						attribute.Int("gql.request.complexity.limit", 1000),
-						attribute.Int("gql.request.complexity.calculated", 2),
+						attribute.Int("gql.request.complexity.calculated", 3),
 					},
 				},
 			},
@@ -140,7 +141,7 @@ func TestTracer(t *testing.T) {
 		{
 			name: "error from root field",
 			params: &graphql.RawParams{
-				Query:     `query($name: String!) {user(name: $name) {name}}`,
+				Query:     `query($name: String!) {user(name: $name) {name isAdmin}}`,
 				Variables: map[string]any{"name": "forbidden"},
 			},
 			spans: tracetest.SpanStubs{
@@ -166,7 +167,7 @@ func TestTracer(t *testing.T) {
 					Attributes: []attribute.KeyValue{
 						attribute.String("gql.request.variables.name", "forbidden"),
 						attribute.Int("gql.request.complexity.limit", 1000),
-						attribute.Int("gql.request.complexity.calculated", 2),
+						attribute.Int("gql.request.complexity.calculated", 3),
 					},
 					Events: []sdktrace.Event{
 						{
@@ -185,7 +186,7 @@ func TestTracer(t *testing.T) {
 		{
 			name: "error from edge fields",
 			params: &graphql.RawParams{
-				Query:     `query($name: String!) {user(name: $name) {name age}}`,
+				Query:     `query($name: String!) {user(name: $name) {name age isAdmin}}`,
 				Variables: map[string]any{"name": "invalid"},
 			},
 			spans: tracetest.SpanStubs{
@@ -235,7 +236,7 @@ func TestTracer(t *testing.T) {
 					Attributes: []attribute.KeyValue{
 						attribute.String("gql.request.variables.name", "invalid"),
 						attribute.Int("gql.request.complexity.limit", 1000),
-						attribute.Int("gql.request.complexity.calculated", 3),
+						attribute.Int("gql.request.complexity.calculated", 4),
 					},
 					Events: []sdktrace.Event{
 						{
@@ -327,6 +328,66 @@ func TestTracer(t *testing.T) {
 				},
 			},
 		},
+		{
+			name:    "ok/TraceStructFields(true)",
+			options: []otelgqlgen.Option{otelgqlgen.TraceStructFields(true)},
+			params: &graphql.RawParams{
+				Query:     `query($name: String!) {user(name: $name) @include(if: true) {name @include(if: true) isAdmin}}`,
+				Variables: map[string]any{"name": "aereal"},
+			},
+			spans: tracetest.SpanStubs{
+				{Name: "parsing", SpanKind: trace.SpanKindServer},
+				{Name: "read", SpanKind: trace.SpanKindServer},
+				{Name: "validation", SpanKind: trace.SpanKindServer},
+				{
+					Name:     "Query/user",
+					SpanKind: trace.SpanKindServer,
+					Attributes: []attribute.KeyValue{
+						attribute.String("gql.resolver.object", "Query"),
+						attribute.String("gql.resolver.field", "user"),
+						attribute.String("gql.resolver.alias", "user"),
+						attribute.String("gql.resolver.directives.include.location", "FIELD"),
+						attribute.String("gql.resolver.directives.include.args.if", "true"),
+						attribute.String("gql.resolver.args.name", "$name"),
+						attribute.String("gql.resolver.path", "user"),
+						attribute.Bool("gql.resolver.is_method", true),
+						attribute.Bool("gql.resolver.is_resolver", true),
+					}},
+				{
+					Name:     "User/isAdmin",
+					SpanKind: trace.SpanKindServer,
+					Attributes: []attribute.KeyValue{
+						attribute.String("gql.resolver.object", "User"),
+						attribute.String("gql.resolver.field", "isAdmin"),
+						attribute.String("gql.resolver.alias", "isAdmin"),
+						attribute.String("gql.resolver.path", "user.isAdmin"),
+						attribute.Bool("gql.resolver.is_method", false),
+						attribute.Bool("gql.resolver.is_resolver", false),
+					}},
+				{
+					Name:     "User/name",
+					SpanKind: trace.SpanKindServer,
+					Attributes: []attribute.KeyValue{
+						attribute.String("gql.resolver.object", "User"),
+						attribute.String("gql.resolver.field", "name"),
+						attribute.String("gql.resolver.alias", "name"),
+						attribute.String("gql.resolver.directives.include.location", "FIELD"),
+						attribute.String("gql.resolver.directives.include.args.if", "true"),
+						attribute.String("gql.resolver.path", "user.name"),
+						attribute.Bool("gql.resolver.is_method", true),
+						attribute.Bool("gql.resolver.is_resolver", true),
+					}},
+				{
+					Name:     "anonymous-op",
+					SpanKind: trace.SpanKindServer,
+					Attributes: []attribute.KeyValue{
+						attribute.String("gql.request.variables.name", "aereal"),
+						attribute.Int("gql.request.complexity.limit", 1000),
+						attribute.Int("gql.request.complexity.calculated", 3),
+					},
+				},
+			},
+		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -340,7 +401,9 @@ func TestTracer(t *testing.T) {
 			gqlsrv := handler.New(execschema.NewExecutableSchema(execschema.Config{Resolvers: &resolvers.Resolver{}}))
 			gqlsrv.AddTransport(transport.POST{})
 			gqlsrv.Use(extension.AutomaticPersistedQuery{Cache: graphql.NoCache{}})
-			gqlsrv.Use(otelgqlgen.New(otelgqlgen.WithTracerProvider(tp)))
+			options := tc.options[:]
+			options = append(options, otelgqlgen.WithTracerProvider(tp))
+			gqlsrv.Use(otelgqlgen.New(options...))
 			gqlsrv.Use(extension.FixedComplexityLimit(1000))
 			srv := httptest.NewServer(gqlsrv)
 			defer srv.Close()

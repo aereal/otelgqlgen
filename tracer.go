@@ -2,6 +2,8 @@ package otelgqlgen
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"strings"
 
@@ -26,6 +28,7 @@ const (
 type config struct {
 	tracerProvider          trace.TracerProvider
 	complexityExtensionName string
+	traceStructFields       bool
 }
 
 type Option func(c *config)
@@ -44,6 +47,16 @@ func WithComplexityLimitExtensionName(extName string) Option {
 	}
 }
 
+// TraceStructFields creates an Option that enforces Tracer to struct fields resolver.
+//
+// default value: false
+// The false means the Tracer only traces the resolvers runs against struct methods or resolver methods.
+func TraceStructFields(v bool) Option {
+	return func(c *config) {
+		c.traceStructFields = v
+	}
+}
+
 // New returns a new Tracer with given options.
 func New(opts ...Option) Tracer {
 	cfg := &config{}
@@ -56,6 +69,7 @@ func New(opts ...Option) Tracer {
 	t := Tracer{
 		tracer:                  cfg.tracerProvider.Tracer(tracerName, trace.WithInstrumentationVersion(contrib.SemVersion())),
 		complexityExtensionName: cfg.complexityExtensionName,
+		traceStructFields:       cfg.traceStructFields,
 	}
 	if t.complexityExtensionName == "" {
 		t.complexityExtensionName = defaultComplexityExtensionName
@@ -67,6 +81,7 @@ func New(opts ...Option) Tracer {
 type Tracer struct {
 	tracer                  trace.Tracer
 	complexityExtensionName string
+	traceStructFields       bool
 }
 
 var _ interface {
@@ -96,6 +111,12 @@ func (t Tracer) InterceptResponse(ctx context.Context, next graphql.ResponseHand
 		return next(ctx)
 	}
 	t.captureOperationTimings(ctx)
+
+	if false {
+		b := sha256.Sum256([]byte(opCtx.RawQuery))
+		sum := hex.EncodeToString(b[:])
+		fmt.Printf("spanID=%q sha256=%q\n", span.SpanContext().SpanID(), sum)
+	}
 
 	attrs := make([]attribute.KeyValue, 0, len(opCtx.Variables)+2+2)
 	for k, v := range opCtx.Variables {
@@ -153,6 +174,9 @@ func fieldSpanName(fc *graphql.FieldContext) string {
 
 func (t Tracer) InterceptField(ctx context.Context, next graphql.Resolver) (any, error) {
 	fieldCtx := graphql.GetFieldContext(ctx)
+	if !t.traceStructFields && !(fieldCtx.IsMethod || fieldCtx.IsResolver) {
+		return next(ctx)
+	}
 	field := fieldCtx.Field
 	ctx, span := t.tracer.Start(ctx, fieldSpanName(fieldCtx), trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()

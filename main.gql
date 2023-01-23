@@ -6,6 +6,7 @@ directive @goField(
 type User {
   name: String! @goField(forceResolver: true)
   age: Int @goField(forceResolver: true)
+  isAdmin: Boolean!
 }
 
 input NestedInput {

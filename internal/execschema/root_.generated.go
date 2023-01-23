@@ -44,8 +44,9 @@ type ComplexityRoot struct {
 	}
 
 	User struct {
-		Age  func(childComplexity int) int
-		Name func(childComplexity int) int
+		Age     func(childComplexity int) int
+		IsAdmin func(childComplexity int) int
+		Name    func(childComplexity int) int
 	}
 }
 
@@ -94,6 +95,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.User.Age(childComplexity), true
+
+	case "User.isAdmin":
+		if e.complexity.User.IsAdmin == nil {
+			break
+		}
+
+		return e.complexity.User.IsAdmin(childComplexity), true
 
 	case "User.name":
 		if e.complexity.User.Name == nil {
@@ -165,6 +173,7 @@ var sources = []*ast.Source{
 type User {
   name: String! @goField(forceResolver: true)
   age: Int @goField(forceResolver: true)
+  isAdmin: Boolean!
 }
 
 input NestedInput {
