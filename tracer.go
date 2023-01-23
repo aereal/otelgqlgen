@@ -277,7 +277,7 @@ func attrReqVariable(key string, val any) attribute.KeyValue {
 }
 
 var (
-	ns              = "gql"
+	ns              = "graphql"
 	nsResolver      = ns + ".resolver"
 	nsReq           = ns + ".request"
 	directivePrefix = attrNameHierarchy{nsResolver + ".directives"}
