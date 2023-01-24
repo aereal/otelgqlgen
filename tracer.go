@@ -2,8 +2,6 @@ package otelgqlgen
 
 import (
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
 	"fmt"
 	"strings"
 
@@ -100,23 +98,20 @@ func (Tracer) Validate(_ graphql.ExecutableSchema) error {
 
 func (t Tracer) InterceptResponse(ctx context.Context, next graphql.ResponseHandler) *graphql.Response {
 	opCtx := graphql.GetOperationContext(ctx)
-	opts := make([]trace.SpanStartOption, 0, 2)
-	opts = append(opts, trace.WithSpanKind(trace.SpanKindServer))
+	name := operationName(ctx)
+	opts := make([]trace.SpanStartOption, 0, 3)
+	opts = append(opts,
+		trace.WithSpanKind(trace.SpanKindServer),
+		trace.WithAttributes(keyOpName.String(name), keyOpType.String(string(opCtx.Operation.Operation))))
 	if !opCtx.Stats.OperationStart.IsZero() {
 		opts = append(opts, trace.WithTimestamp(opCtx.Stats.OperationStart))
 	}
-	ctx, span := t.tracer.Start(ctx, operationName(ctx), opts...)
+	ctx, span := t.tracer.Start(ctx, name, opts...)
 	defer span.End()
 	if !span.IsRecording() {
 		return next(ctx)
 	}
 	t.captureOperationTimings(ctx)
-
-	if false {
-		b := sha256.Sum256([]byte(opCtx.RawQuery))
-		sum := hex.EncodeToString(b[:])
-		fmt.Printf("spanID=%q sha256=%q\n", span.SpanContext().SpanID(), sum)
-	}
 
 	attrs := make([]attribute.KeyValue, 0, len(opCtx.Variables)+2+2)
 	for k, v := range opCtx.Variables {
@@ -204,7 +199,10 @@ func operationName(ctx context.Context) string {
 	if name := opCtx.OperationName; name != "" {
 		return name
 	}
-	return anonymousOpName
+	if op := opCtx.Operation; op != nil && op.Name != "" {
+		return op.Name
+	}
+	return string(opCtx.Operation.Operation)
 }
 
 func recordGQLErrors(span trace.Span, errs gqlerror.List) {
@@ -277,13 +275,15 @@ func attrReqVariable(key string, val any) attribute.KeyValue {
 }
 
 var (
-	ns              = "gql"
+	ns              = "graphql"
 	nsResolver      = ns + ".resolver"
-	nsReq           = ns + ".request"
+	nsReq           = ns + ".operation"
 	directivePrefix = attrNameHierarchy{nsResolver + ".directives"}
 	argsPrefix      = attrNameHierarchy{nsResolver + ".args"}
 	reqVarsPrefix   = attrNameHierarchy{nsReq + ".variables"}
 
+	keyOpName               = attribute.Key(nsReq + ".name")
+	keyOpType               = attribute.Key(nsReq + ".type")
 	keyAPQHash              = attribute.Key(nsReq + ".apq.hash")
 	keyAPQSendQuery         = attribute.Key(nsReq + ".apq.sent_query")
 	keyComplexityLimit      = attribute.Key(nsReq + ".complexity.limit")

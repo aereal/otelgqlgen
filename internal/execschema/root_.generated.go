@@ -30,6 +30,7 @@ type Config struct {
 }
 
 type ResolverRoot interface {
+	Mutation() MutationResolver
 	Query() QueryResolver
 	User() UserResolver
 }
@@ -38,6 +39,10 @@ type DirectiveRoot struct {
 }
 
 type ComplexityRoot struct {
+	Mutation struct {
+		RegisterUser func(childComplexity int, name string) int
+	}
+
 	Query struct {
 		Root func(childComplexity int, num *int, rootInput *model.RootInput) int
 		User func(childComplexity int, name string) int
@@ -64,6 +69,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	ec := executionContext{nil, e}
 	_ = ec
 	switch typeName + "." + field {
+
+	case "Mutation.registerUser":
+		if e.complexity.Mutation.RegisterUser == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_registerUser_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.RegisterUser(childComplexity, args["name"].(string)), true
 
 	case "Query.root":
 		if e.complexity.Query.Root == nil {
@@ -139,6 +156,21 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 				Data: buf.Bytes(),
 			}
 		}
+	case ast.Mutation:
+		return func(ctx context.Context) *graphql.Response {
+			if !first {
+				return nil
+			}
+			first = false
+			ctx = graphql.WithUnmarshalerMap(ctx, inputUnmarshalMap)
+			data := ec._Mutation(ctx, rc.Operation.SelectionSet)
+			var buf bytes.Buffer
+			data.MarshalGQL(&buf)
+
+			return &graphql.Response{
+				Data: buf.Bytes(),
+			}
+		}
 
 	default:
 		return graphql.OneShot(graphql.ErrorResponse(ctx, "unsupported GraphQL operation"))
@@ -187,6 +219,10 @@ input RootInput {
 type Query {
   user(name: String!): User
   root(num: Int, rootInput: RootInput = {nested: {}}): Boolean!
+}
+
+type Mutation {
+  registerUser(name: String!): Boolean!
 }
 `, BuiltIn: false},
 }
