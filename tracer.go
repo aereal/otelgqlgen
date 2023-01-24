@@ -96,23 +96,33 @@ func (Tracer) Validate(_ graphql.ExecutableSchema) error {
 	return nil
 }
 
-func (t Tracer) InterceptResponse(ctx context.Context, next graphql.ResponseHandler) *graphql.Response {
+func (t Tracer) startResponseSpan(ctx context.Context) (context.Context, trace.Span) {
 	opCtx := graphql.GetOperationContext(ctx)
 	name := operationName(ctx)
 	opts := make([]trace.SpanStartOption, 0, 3)
+	attrs := make([]attribute.KeyValue, 0, 2)
+	attrs = append(attrs, keyOpName.String(name))
+	if op := opCtx.Operation; op != nil {
+		attrs = append(attrs, keyOpType.String(string(op.Operation)))
+	}
 	opts = append(opts,
 		trace.WithSpanKind(trace.SpanKindServer),
-		trace.WithAttributes(keyOpName.String(name), keyOpType.String(string(opCtx.Operation.Operation))))
+		trace.WithAttributes(attrs...))
 	if !opCtx.Stats.OperationStart.IsZero() {
 		opts = append(opts, trace.WithTimestamp(opCtx.Stats.OperationStart))
 	}
-	ctx, span := t.tracer.Start(ctx, name, opts...)
+	return t.tracer.Start(ctx, name, opts...)
+}
+
+func (t Tracer) InterceptResponse(ctx context.Context, next graphql.ResponseHandler) *graphql.Response {
+	ctx, span := t.startResponseSpan(ctx)
 	defer span.End()
 	if !span.IsRecording() {
 		return next(ctx)
 	}
 	t.captureOperationTimings(ctx)
 
+	opCtx := graphql.GetOperationContext(ctx)
 	attrs := make([]attribute.KeyValue, 0, len(opCtx.Variables)+2+2)
 	for k, v := range opCtx.Variables {
 		attrs = append(attrs, attrReqVariable(k, v))
@@ -199,10 +209,14 @@ func operationName(ctx context.Context) string {
 	if name := opCtx.OperationName; name != "" {
 		return name
 	}
-	if op := opCtx.Operation; op != nil && op.Name != "" {
+	op := opCtx.Operation
+	if op == nil {
+		return "GraphQL Operation"
+	}
+	if op := opCtx.Operation; op.Name != "" {
 		return op.Name
 	}
-	return string(opCtx.Operation.Operation)
+	return string(op.Operation)
 }
 
 func recordGQLErrors(span trace.Span, errs gqlerror.List) {
