@@ -13,6 +13,7 @@ import (
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
+	semconv "go.opentelemetry.io/otel/semconv/v1.17.0"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -101,9 +102,9 @@ func (t Tracer) startResponseSpan(ctx context.Context) (context.Context, trace.S
 	name := operationName(ctx)
 	opts := make([]trace.SpanStartOption, 0, 3)
 	attrs := make([]attribute.KeyValue, 0, 2)
-	attrs = append(attrs, keyOpName.String(name))
+	attrs = append(attrs, semconv.GraphqlOperationNameKey.String(name))
 	if op := opCtx.Operation; op != nil {
-		attrs = append(attrs, keyOpType.String(string(op.Operation)))
+		attrs = append(attrs, semconv.GraphqlOperationTypeKey.String(string(op.Operation)))
 	}
 	opts = append(opts,
 		trace.WithSpanKind(trace.SpanKindServer),
@@ -296,8 +297,6 @@ var (
 	argsPrefix      = attrNameHierarchy{nsResolver + ".args"}
 	reqVarsPrefix   = attrNameHierarchy{nsReq + ".variables"}
 
-	keyOpName               = attribute.Key(nsReq + ".name")
-	keyOpType               = attribute.Key(nsReq + ".type")
 	keyAPQHash              = attribute.Key(nsReq + ".apq.hash")
 	keyAPQSendQuery         = attribute.Key(nsReq + ".apq.sent_query")
 	keyComplexityLimit      = attribute.Key(nsReq + ".complexity.limit")
