@@ -3,7 +3,7 @@
 package model
 
 type NestedInput struct {
-	Val *string `json:"val"`
+	Val *string `json:"val,omitempty"`
 }
 
 type RootInput struct {
@@ -12,6 +12,6 @@ type RootInput struct {
 
 type User struct {
 	Name    string `json:"name"`
-	Age     *int   `json:"age"`
+	Age     *int   `json:"age,omitempty"`
 	IsAdmin bool   `json:"isAdmin"`
 }
