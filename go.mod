@@ -3,9 +3,9 @@ module github.com/aereal/otelgqlgen
 go 1.19
 
 require (
-	github.com/99designs/gqlgen v0.17.35
+	github.com/99designs/gqlgen v0.17.37
 	github.com/google/go-cmp v0.5.9
-	github.com/vektah/gqlparser/v2 v2.5.8
+	github.com/vektah/gqlparser/v2 v2.5.9
 	go.opentelemetry.io/contrib v1.17.0
 	go.opentelemetry.io/otel v1.16.0
 	go.opentelemetry.io/otel/sdk v1.16.0
@@ -17,6 +17,7 @@ require (
 	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
 	github.com/go-logr/logr v1.2.4 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
+	github.com/google/uuid v1.3.0 // indirect
 	github.com/gorilla/websocket v1.5.0 // indirect
 	github.com/hashicorp/golang-lru/v2 v2.0.3 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
