@@ -31,7 +31,7 @@ jobs:
       - run: go mod download
       - name: test
         run: go test -v -race -coverprofile=cover.out $TEST_TARGET
-      - uses: actions/upload-artifact@v3.1.2
+      - uses: actions/upload-artifact@v3.1.3
         with:
           name: coverage
           path: ./cover.out
