@@ -3,7 +3,7 @@ module github.com/aereal/otelgqlgen
 go 1.19
 
 require (
-	github.com/99designs/gqlgen v0.17.38
+	github.com/99designs/gqlgen v0.17.39
 	github.com/google/go-cmp v0.5.9
 	github.com/vektah/gqlparser/v2 v2.5.10
 	go.opentelemetry.io/contrib v1.19.0
@@ -22,6 +22,7 @@ require (
 	github.com/hashicorp/golang-lru/v2 v2.0.3 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
+	github.com/sosodev/duration v1.1.0 // indirect
 	github.com/urfave/cli/v2 v2.25.5 // indirect
 	github.com/xrash/smetrics v0.0.0-20201216005158-039620a65673 // indirect
 	go.opentelemetry.io/otel/metric v1.18.0 // indirect
