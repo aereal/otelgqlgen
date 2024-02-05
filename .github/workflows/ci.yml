@@ -46,7 +46,7 @@ jobs:
       - test
     steps:
       - uses: actions/checkout@v3.3.0
-      - uses: actions/download-artifact@v3.0.2
+      - uses: actions/download-artifact@v4.1.2
         with:
           name: coverage
       - uses: k1LoW/octocov-action@v0.46.0
