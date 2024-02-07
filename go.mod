@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/99designs/gqlgen v0.17.41
-	github.com/google/go-cmp v0.5.9
+	github.com/google/go-cmp v0.6.0
 	github.com/vektah/gqlparser/v2 v2.5.11
 	go.opentelemetry.io/contrib v1.21.1
 	go.opentelemetry.io/otel v1.18.0
