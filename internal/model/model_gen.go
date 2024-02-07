@@ -2,8 +2,14 @@
 
 package model
 
+type Mutation struct {
+}
+
 type NestedInput struct {
 	Val *string `json:"val,omitempty"`
+}
+
+type Query struct {
 }
 
 type RootInput struct {

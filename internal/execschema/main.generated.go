@@ -557,8 +557,6 @@ func (ec *executionContext) unmarshalInputNestedInput(ctx context.Context, obj i
 		}
 		switch k {
 		case "val":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("val"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
@@ -590,8 +588,6 @@ func (ec *executionContext) unmarshalInputRootInput(ctx context.Context, obj int
 		}
 		switch k {
 		case "nested":
-			var err error
-
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nested"))
 			data, err := ec.unmarshalNNestedInput2ᚖgithubᚗcomᚋaerealᚋotelgqlgenᚋinternalᚋmodelᚐNestedInput(ctx, v)
 			if err != nil {
