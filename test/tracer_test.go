@@ -1,4 +1,4 @@
-package otelgqlgen_test
+package test
 
 import (
 	"bytes"
@@ -14,8 +14,8 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler/extension"
 	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/aereal/otelgqlgen"
-	"github.com/aereal/otelgqlgen/internal/execschema"
-	"github.com/aereal/otelgqlgen/internal/resolvers"
+	"github.com/aereal/otelgqlgen/test/execschema"
+	"github.com/aereal/otelgqlgen/test/resolvers"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"go.opentelemetry.io/otel/attribute"
@@ -45,8 +45,8 @@ func TestTracer(t *testing.T) {
 				Variables: map[string]any{"name": "aereal"},
 			},
 			spans: tracetest.SpanStubs{
-				{Name: "parsing", SpanKind: trace.SpanKindServer},
 				{Name: "read", SpanKind: trace.SpanKindServer},
+				{Name: "parsing", SpanKind: trace.SpanKindServer},
 				{Name: "validation", SpanKind: trace.SpanKindServer},
 				{
 					Name:     "Query/user",
@@ -95,8 +95,8 @@ func TestTracer(t *testing.T) {
 				Variables: map[string]any{"name": "aereal"},
 			},
 			spans: tracetest.SpanStubs{
-				{Name: "parsing", SpanKind: trace.SpanKindServer},
 				{Name: "read", SpanKind: trace.SpanKindServer},
+				{Name: "parsing", SpanKind: trace.SpanKindServer},
 				{Name: "validation", SpanKind: trace.SpanKindServer},
 				{
 					Name:     "Query/user",
@@ -146,8 +146,8 @@ func TestTracer(t *testing.T) {
 				OperationName: "namedOp",
 			},
 			spans: tracetest.SpanStubs{
-				{Name: "parsing", SpanKind: trace.SpanKindServer},
 				{Name: "read", SpanKind: trace.SpanKindServer},
+				{Name: "parsing", SpanKind: trace.SpanKindServer},
 				{Name: "validation", SpanKind: trace.SpanKindServer},
 				{
 					Name:     "Query/user",
@@ -202,8 +202,8 @@ func TestTracer(t *testing.T) {
 				},
 			},
 			spans: tracetest.SpanStubs{
-				{Name: "parsing", SpanKind: trace.SpanKindServer},
 				{Name: "read", SpanKind: trace.SpanKindServer},
+				{Name: "parsing", SpanKind: trace.SpanKindServer},
 				{Name: "validation", SpanKind: trace.SpanKindServer},
 				{
 					Name:     "Query/user",
@@ -250,8 +250,8 @@ func TestTracer(t *testing.T) {
 				Variables: map[string]any{"name": "forbidden"},
 			},
 			spans: tracetest.SpanStubs{
-				{Name: "parsing", SpanKind: trace.SpanKindServer},
 				{Name: "read", SpanKind: trace.SpanKindServer},
+				{Name: "parsing", SpanKind: trace.SpanKindServer},
 				{Name: "validation", SpanKind: trace.SpanKindServer},
 				{
 					Name:     "Query/user",
@@ -297,8 +297,8 @@ func TestTracer(t *testing.T) {
 				Variables: map[string]any{"name": "invalid"},
 			},
 			spans: tracetest.SpanStubs{
-				{Name: "parsing", SpanKind: trace.SpanKindServer},
 				{Name: "read", SpanKind: trace.SpanKindServer},
+				{Name: "parsing", SpanKind: trace.SpanKindServer},
 				{Name: "validation", SpanKind: trace.SpanKindServer},
 				{
 					Name:     "Query/user",
@@ -376,8 +376,8 @@ func TestTracer(t *testing.T) {
 				Query: `{ root }`,
 			},
 			spans: tracetest.SpanStubs{
-				{Name: "parsing", SpanKind: trace.SpanKindServer},
 				{Name: "read", SpanKind: trace.SpanKindServer},
+				{Name: "parsing", SpanKind: trace.SpanKindServer},
 				{Name: "validation", SpanKind: trace.SpanKindServer},
 				{
 					Name:     "Query/root",
@@ -412,8 +412,8 @@ func TestTracer(t *testing.T) {
 				Query: `query { root(rootInput: {nested: {val: "root"}}) }`,
 			},
 			spans: tracetest.SpanStubs{
-				{Name: "parsing", SpanKind: trace.SpanKindServer},
 				{Name: "read", SpanKind: trace.SpanKindServer},
+				{Name: "parsing", SpanKind: trace.SpanKindServer},
 				{Name: "validation", SpanKind: trace.SpanKindServer},
 				{
 					Name:     "Query/root",
@@ -449,8 +449,8 @@ func TestTracer(t *testing.T) {
 				Variables: map[string]any{"name": "aereal"},
 			},
 			spans: tracetest.SpanStubs{
-				{Name: "parsing", SpanKind: trace.SpanKindServer},
 				{Name: "read", SpanKind: trace.SpanKindServer},
+				{Name: "parsing", SpanKind: trace.SpanKindServer},
 				{Name: "validation", SpanKind: trace.SpanKindServer},
 				{
 					Name:     "Query/user",
@@ -510,8 +510,8 @@ func TestTracer(t *testing.T) {
 				Variables: map[string]any{"name": "aereal"},
 			},
 			spans: tracetest.SpanStubs{
-				{Name: "parsing", SpanKind: trace.SpanKindServer},
 				{Name: "read", SpanKind: trace.SpanKindServer},
+				{Name: "parsing", SpanKind: trace.SpanKindServer},
 				{Name: "validation", SpanKind: trace.SpanKindServer},
 				{
 					Name:     "Mutation/registerUser",
@@ -595,8 +595,8 @@ func TestTracer_no_operation_provided(t *testing.T) {
 	defer cancel()
 
 	wantSpans := tracetest.SpanStubs{
-		{Name: "parsing", SpanKind: trace.SpanKindServer},
 		{Name: "read", SpanKind: trace.SpanKindServer},
+		{Name: "parsing", SpanKind: trace.SpanKindServer},
 		{Name: "validation", SpanKind: trace.SpanKindServer},
 		{
 			Name:     "GraphQL Operation",
@@ -660,6 +660,7 @@ func TestTracer_no_operation_provided(t *testing.T) {
 func cmpSpans(want, got tracetest.SpanStubs) string {
 	opts := []cmp.Option{
 		cmp.Transformer("attribute.KeyValue", transformKeyValue),
+		cmpopts.SortSlices(func(x, y tracetest.SpanStub) bool { return x.EndTime.Before(y.EndTime) }),
 		cmpopts.IgnoreFields(sdktrace.Event{}, "Time"),
 		cmpopts.IgnoreFields(tracetest.SpanStub{}, "Parent", "SpanContext", "StartTime", "EndTime", "Links", "DroppedAttributes", "DroppedEvents", "DroppedLinks", "ChildSpanCount", "Resource", "InstrumentationLibrary"),
 	}
