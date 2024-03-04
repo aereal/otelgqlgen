@@ -9,7 +9,6 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler/extension"
 	"github.com/vektah/gqlparser/v2/ast"
 	"github.com/vektah/gqlparser/v2/gqlerror"
-	"go.opentelemetry.io/contrib"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
@@ -66,7 +65,7 @@ func New(opts ...Option) Tracer {
 		cfg.tracerProvider = otel.GetTracerProvider()
 	}
 	t := Tracer{
-		tracer:                  cfg.tracerProvider.Tracer(tracerName, trace.WithInstrumentationVersion(contrib.SemVersion())),
+		tracer:                  cfg.tracerProvider.Tracer(tracerName),
 		complexityExtensionName: cfg.complexityExtensionName,
 		traceStructFields:       cfg.traceStructFields,
 	}
