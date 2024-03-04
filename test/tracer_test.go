@@ -1,4 +1,4 @@
-package otelgqlgen_test
+package test
 
 import (
 	"bytes"
@@ -14,8 +14,8 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler/extension"
 	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/aereal/otelgqlgen"
-	"github.com/aereal/otelgqlgen/internal/execschema"
-	"github.com/aereal/otelgqlgen/internal/resolvers"
+	"github.com/aereal/otelgqlgen/test/execschema"
+	"github.com/aereal/otelgqlgen/test/resolvers"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"go.opentelemetry.io/otel/attribute"

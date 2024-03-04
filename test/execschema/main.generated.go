@@ -11,7 +11,7 @@ import (
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
-	"github.com/aereal/otelgqlgen/internal/model"
+	"github.com/aereal/otelgqlgen/test/model"
 	"github.com/vektah/gqlparser/v2/ast"
 )
 
@@ -78,7 +78,7 @@ func (ec *executionContext) field_Query_root_args(ctx context.Context, rawArgs m
 	var arg1 *model.RootInput
 	if tmp, ok := rawArgs["rootInput"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("rootInput"))
-		arg1, err = ec.unmarshalORootInput2ᚖgithubᚗcomᚋaerealᚋotelgqlgenᚋinternalᚋmodelᚐRootInput(ctx, tmp)
+		arg1, err = ec.unmarshalORootInput2ᚖgithubᚗcomᚋaerealᚋotelgqlgenᚋtestᚋmodelᚐRootInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -190,7 +190,7 @@ func (ec *executionContext) _Query_user(ctx context.Context, field graphql.Colle
 	}
 	res := resTmp.(*model.User)
 	fc.Result = res
-	return ec.marshalOUser2ᚖgithubᚗcomᚋaerealᚋotelgqlgenᚋinternalᚋmodelᚐUser(ctx, field.Selections, res)
+	return ec.marshalOUser2ᚖgithubᚗcomᚋaerealᚋotelgqlgenᚋtestᚋmodelᚐUser(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_user(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -589,7 +589,7 @@ func (ec *executionContext) unmarshalInputRootInput(ctx context.Context, obj int
 		switch k {
 		case "nested":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nested"))
-			data, err := ec.unmarshalNNestedInput2ᚖgithubᚗcomᚋaerealᚋotelgqlgenᚋinternalᚋmodelᚐNestedInput(ctx, v)
+			data, err := ec.unmarshalNNestedInput2ᚖgithubᚗcomᚋaerealᚋotelgqlgenᚋtestᚋmodelᚐNestedInput(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -860,12 +860,12 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 
 // region    ***************************** type.gotpl *****************************
 
-func (ec *executionContext) unmarshalNNestedInput2ᚖgithubᚗcomᚋaerealᚋotelgqlgenᚋinternalᚋmodelᚐNestedInput(ctx context.Context, v interface{}) (*model.NestedInput, error) {
+func (ec *executionContext) unmarshalNNestedInput2ᚖgithubᚗcomᚋaerealᚋotelgqlgenᚋtestᚋmodelᚐNestedInput(ctx context.Context, v interface{}) (*model.NestedInput, error) {
 	res, err := ec.unmarshalInputNestedInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalORootInput2ᚖgithubᚗcomᚋaerealᚋotelgqlgenᚋinternalᚋmodelᚐRootInput(ctx context.Context, v interface{}) (*model.RootInput, error) {
+func (ec *executionContext) unmarshalORootInput2ᚖgithubᚗcomᚋaerealᚋotelgqlgenᚋtestᚋmodelᚐRootInput(ctx context.Context, v interface{}) (*model.RootInput, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -873,7 +873,7 @@ func (ec *executionContext) unmarshalORootInput2ᚖgithubᚗcomᚋaerealᚋotelg
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalOUser2ᚖgithubᚗcomᚋaerealᚋotelgqlgenᚋinternalᚋmodelᚐUser(ctx context.Context, sel ast.SelectionSet, v *model.User) graphql.Marshaler {
+func (ec *executionContext) marshalOUser2ᚖgithubᚗcomᚋaerealᚋotelgqlgenᚋtestᚋmodelᚐUser(ctx context.Context, sel ast.SelectionSet, v *model.User) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}

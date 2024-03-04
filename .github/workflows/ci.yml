@@ -13,7 +13,7 @@ jobs:
         uses: reviewdog/action-golangci-lint@v2.2.2
   test:
     env:
-      TEST_TARGET: ./...
+      TEST_TARGET: ./... github.com/aereal/otelgqlgen/test
     strategy:
       matrix:
         go_version:
