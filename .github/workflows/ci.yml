@@ -17,7 +17,6 @@ jobs:
     strategy:
       matrix:
         go_version:
-          - '1.20.x'
           - '1.21.x'
           - '1.22.x'
         os:
@@ -29,6 +28,12 @@ jobs:
         with:
           go-version: ${{ matrix.go_version }}
           cache: true
+          cache-dependency-path: |
+            go.sum
+            test/go.sum
+      - run: |
+          go work init ./ ./test
+          go work sync
       - run: go mod download
       - name: test
         run: go test -v -race -coverprofile=cover.out $TEST_TARGET
