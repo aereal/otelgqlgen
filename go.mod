@@ -5,7 +5,7 @@ go 1.21
 toolchain go1.22.4
 
 require (
-	github.com/99designs/gqlgen v0.17.47
+	github.com/99designs/gqlgen v0.17.48
 	github.com/vektah/gqlparser/v2 v2.5.12
 	go.opentelemetry.io/otel v1.26.0
 	go.opentelemetry.io/otel/trace v1.26.0
