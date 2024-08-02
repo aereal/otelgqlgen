@@ -37,7 +37,7 @@ jobs:
       - run: go mod download
       - name: test
         run: go test -v -race -coverprofile=cover.out $TEST_TARGET
-      - uses: actions/upload-artifact@v4.3.4
+      - uses: actions/upload-artifact@v4.3.5
         if: ${{ matrix.go_version == '1.22.x' }}
         with:
           name: coverage
