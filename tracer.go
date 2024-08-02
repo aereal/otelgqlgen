@@ -229,7 +229,23 @@ func recordGQLErrors(span trace.Span, errs gqlerror.List) {
 		attrs := []attribute.KeyValue{
 			keyErrorPath.String(e.Path.String()),
 		}
-		span.RecordError(e, trace.WithStackTrace(true), trace.WithAttributes(attrs...))
+		err := unwrapErr(e)
+		span.RecordError(err, trace.WithStackTrace(true), trace.WithAttributes(attrs...))
+	}
+}
+
+func unwrapErr(err error) error {
+	var underlying error = err
+	for {
+		wrapped, ok := underlying.(interface{ Unwrap() error })
+		if !ok {
+			return underlying
+		}
+		unwrapped := wrapped.Unwrap()
+		if unwrapped == nil {
+			return underlying
+		}
+		underlying = unwrapped
 	}
 }
 
