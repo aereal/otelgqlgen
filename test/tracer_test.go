@@ -292,7 +292,22 @@ func TestTracer(t *testing.T) {
 						},
 					},
 				},
-				{Name: "http_handler", SpanKind: trace.SpanKindInternal},
+				{
+					Name:     "http_handler",
+					SpanKind: trace.SpanKindInternal,
+					Status:   sdktrace.Status{Code: codes.Error, Description: "input: user forbidden\n"},
+					Events: []sdktrace.Event{
+						{
+							Name: semconv.ExceptionEventName,
+							Attributes: []attribute.KeyValue{
+								attribute.String("graphql.errors.path", "user"),
+								semconv.ExceptionTypeKey.String("*gqlerror.Error"),
+								semconv.ExceptionMessageKey.String("input: user forbidden"),
+								attrStacktrace,
+							},
+						},
+					},
+				},
 			},
 		},
 		{
@@ -373,7 +388,31 @@ func TestTracer(t *testing.T) {
 						},
 					},
 				},
-				{Name: "http_handler", SpanKind: trace.SpanKindInternal},
+				{
+					Name:     "http_handler",
+					SpanKind: trace.SpanKindInternal,
+					Status:   sdktrace.Status{Code: codes.Error, Description: "input: user.name invalid name\ninput: user.age invalid age\n"},
+					Events: []sdktrace.Event{
+						{
+							Name: semconv.ExceptionEventName,
+							Attributes: []attribute.KeyValue{
+								attribute.String("graphql.errors.path", "user.name"),
+								semconv.ExceptionTypeKey.String("*gqlerror.Error"),
+								semconv.ExceptionMessageKey.String("input: user.name invalid name"),
+								attrStacktrace,
+							},
+						},
+						{
+							Name: semconv.ExceptionEventName,
+							Attributes: []attribute.KeyValue{
+								attribute.String("graphql.errors.path", "user.age"),
+								semconv.ExceptionTypeKey.String("*gqlerror.Error"),
+								semconv.ExceptionMessageKey.String("input: user.age invalid age"),
+								attrStacktrace,
+							},
+						},
+					},
+				},
 			},
 		},
 		{

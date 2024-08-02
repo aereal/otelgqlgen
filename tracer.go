@@ -115,6 +115,7 @@ func (t Tracer) startResponseSpan(ctx context.Context) (context.Context, trace.S
 }
 
 func (t Tracer) InterceptResponse(ctx context.Context, next graphql.ResponseHandler) *graphql.Response {
+	parentSpan := trace.SpanFromContext(ctx)
 	ctx, span := t.startResponseSpan(ctx)
 	defer span.End()
 	if !span.IsRecording() {
@@ -143,6 +144,9 @@ func (t Tracer) InterceptResponse(ctx context.Context, next graphql.ResponseHand
 	resp := next(ctx)
 	if resp != nil && len(resp.Errors) > 0 {
 		recordGQLErrors(span, resp.Errors)
+		if parentSpan.SpanContext().IsValid() {
+			recordGQLErrors(parentSpan, resp.Errors)
+		}
 	}
 	return resp
 }
