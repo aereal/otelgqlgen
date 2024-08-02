@@ -86,6 +86,7 @@ func TestTracer(t *testing.T) {
 						attribute.Int("graphql.operation.complexity.calculated", 3),
 					},
 				},
+				{Name: "http_handler", SpanKind: trace.SpanKindInternal},
 			},
 		},
 		{
@@ -136,6 +137,7 @@ func TestTracer(t *testing.T) {
 						attribute.Int("graphql.operation.complexity.calculated", 3),
 					},
 				},
+				{Name: "http_handler", SpanKind: trace.SpanKindInternal},
 			},
 		},
 		{
@@ -187,6 +189,7 @@ func TestTracer(t *testing.T) {
 						attribute.Int("graphql.operation.complexity.calculated", 3),
 					},
 				},
+				{Name: "http_handler", SpanKind: trace.SpanKindInternal},
 			},
 		},
 		{
@@ -241,6 +244,7 @@ func TestTracer(t *testing.T) {
 						attribute.Int("graphql.operation.complexity.calculated", 3),
 					},
 				},
+				{Name: "http_handler", SpanKind: trace.SpanKindInternal},
 			},
 		},
 		{
@@ -288,6 +292,7 @@ func TestTracer(t *testing.T) {
 						},
 					},
 				},
+				{Name: "http_handler", SpanKind: trace.SpanKindInternal},
 			},
 		},
 		{
@@ -368,6 +373,7 @@ func TestTracer(t *testing.T) {
 						},
 					},
 				},
+				{Name: "http_handler", SpanKind: trace.SpanKindInternal},
 			},
 		},
 		{
@@ -404,6 +410,7 @@ func TestTracer(t *testing.T) {
 						attribute.Int("graphql.operation.complexity.calculated", 1),
 					},
 				},
+				{Name: "http_handler", SpanKind: trace.SpanKindInternal},
 			},
 		},
 		{
@@ -439,6 +446,7 @@ func TestTracer(t *testing.T) {
 						attribute.Int("graphql.operation.complexity.calculated", 1),
 					},
 				},
+				{Name: "http_handler", SpanKind: trace.SpanKindInternal},
 			},
 		},
 		{
@@ -501,6 +509,7 @@ func TestTracer(t *testing.T) {
 						attribute.Int("graphql.operation.complexity.calculated", 3),
 					},
 				},
+				{Name: "http_handler", SpanKind: trace.SpanKindInternal},
 			},
 		},
 		{
@@ -537,6 +546,7 @@ func TestTracer(t *testing.T) {
 						attribute.Int("graphql.operation.complexity.calculated", 1),
 					},
 				},
+				{Name: "http_handler", SpanKind: trace.SpanKindInternal},
 			},
 		},
 	}
@@ -556,7 +566,12 @@ func TestTracer(t *testing.T) {
 			options = append(options, otelgqlgen.WithTracerProvider(tp))
 			gqlsrv.Use(otelgqlgen.New(options...))
 			gqlsrv.Use(extension.FixedComplexityLimit(1000))
-			srv := httptest.NewServer(gqlsrv)
+			testTracer := tp.Tracer("test")
+			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				ctx, span := testTracer.Start(r.Context(), "http_handler")
+				defer span.End()
+				gqlsrv.ServeHTTP(w, r.WithContext(ctx))
+			}))
 			defer srv.Close()
 			body, err := json.Marshal(tc.params)
 			if err != nil {
