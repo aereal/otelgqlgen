@@ -20,7 +20,7 @@ func (r *mutationResolver) RegisterUser(ctx context.Context, name string) (bool,
 // User is the resolver for the user field.
 func (r *queryResolver) User(ctx context.Context, name string) (*model.User, error) {
 	if name == "forbidden" {
-		return nil, errors.New("forbidden")
+		return nil, ForbiddenError{}
 	}
 	age := 17
 	return &model.User{Name: name, Age: &age}, nil

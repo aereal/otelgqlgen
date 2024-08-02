@@ -86,6 +86,7 @@ func TestTracer(t *testing.T) {
 						attribute.Int("graphql.operation.complexity.calculated", 3),
 					},
 				},
+				{Name: "http_handler", SpanKind: trace.SpanKindInternal},
 			},
 		},
 		{
@@ -136,6 +137,7 @@ func TestTracer(t *testing.T) {
 						attribute.Int("graphql.operation.complexity.calculated", 3),
 					},
 				},
+				{Name: "http_handler", SpanKind: trace.SpanKindInternal},
 			},
 		},
 		{
@@ -187,6 +189,7 @@ func TestTracer(t *testing.T) {
 						attribute.Int("graphql.operation.complexity.calculated", 3),
 					},
 				},
+				{Name: "http_handler", SpanKind: trace.SpanKindInternal},
 			},
 		},
 		{
@@ -241,6 +244,7 @@ func TestTracer(t *testing.T) {
 						attribute.Int("graphql.operation.complexity.calculated", 3),
 					},
 				},
+				{Name: "http_handler", SpanKind: trace.SpanKindInternal},
 			},
 		},
 		{
@@ -281,8 +285,24 @@ func TestTracer(t *testing.T) {
 							Name: semconv.ExceptionEventName,
 							Attributes: []attribute.KeyValue{
 								attribute.String("graphql.errors.path", "user"),
-								semconv.ExceptionTypeKey.String("*gqlerror.Error"),
-								semconv.ExceptionMessageKey.String("input: user forbidden"),
+								semconv.ExceptionTypeKey.String("github.com/aereal/otelgqlgen/test/resolvers.ForbiddenError"),
+								semconv.ExceptionMessageKey.String("forbidden"),
+								attrStacktrace,
+							},
+						},
+					},
+				},
+				{
+					Name:     "http_handler",
+					SpanKind: trace.SpanKindInternal,
+					Status:   sdktrace.Status{Code: codes.Error, Description: "input: user forbidden\n"},
+					Events: []sdktrace.Event{
+						{
+							Name: semconv.ExceptionEventName,
+							Attributes: []attribute.KeyValue{
+								attribute.String("graphql.errors.path", "user"),
+								semconv.ExceptionTypeKey.String("github.com/aereal/otelgqlgen/test/resolvers.ForbiddenError"),
+								semconv.ExceptionMessageKey.String("forbidden"),
 								attrStacktrace,
 							},
 						},
@@ -352,8 +372,8 @@ func TestTracer(t *testing.T) {
 							Name: semconv.ExceptionEventName,
 							Attributes: []attribute.KeyValue{
 								attribute.String("graphql.errors.path", "user.name"),
-								semconv.ExceptionTypeKey.String("*gqlerror.Error"),
-								semconv.ExceptionMessageKey.String("input: user.name invalid name"),
+								semconv.ExceptionTypeKey.String("*errors.errorString"),
+								semconv.ExceptionMessageKey.String("invalid name"),
 								attrStacktrace,
 							},
 						},
@@ -361,8 +381,33 @@ func TestTracer(t *testing.T) {
 							Name: semconv.ExceptionEventName,
 							Attributes: []attribute.KeyValue{
 								attribute.String("graphql.errors.path", "user.age"),
-								semconv.ExceptionTypeKey.String("*gqlerror.Error"),
-								semconv.ExceptionMessageKey.String("input: user.age invalid age"),
+								semconv.ExceptionTypeKey.String("*errors.errorString"),
+								semconv.ExceptionMessageKey.String("invalid age"),
+								attrStacktrace,
+							},
+						},
+					},
+				},
+				{
+					Name:     "http_handler",
+					SpanKind: trace.SpanKindInternal,
+					Status:   sdktrace.Status{Code: codes.Error, Description: "input: user.name invalid name\ninput: user.age invalid age\n"},
+					Events: []sdktrace.Event{
+						{
+							Name: semconv.ExceptionEventName,
+							Attributes: []attribute.KeyValue{
+								attribute.String("graphql.errors.path", "user.name"),
+								semconv.ExceptionTypeKey.String("*errors.errorString"),
+								semconv.ExceptionMessageKey.String("invalid name"),
+								attrStacktrace,
+							},
+						},
+						{
+							Name: semconv.ExceptionEventName,
+							Attributes: []attribute.KeyValue{
+								attribute.String("graphql.errors.path", "user.age"),
+								semconv.ExceptionTypeKey.String("*errors.errorString"),
+								semconv.ExceptionMessageKey.String("invalid age"),
 								attrStacktrace,
 							},
 						},
@@ -404,6 +449,7 @@ func TestTracer(t *testing.T) {
 						attribute.Int("graphql.operation.complexity.calculated", 1),
 					},
 				},
+				{Name: "http_handler", SpanKind: trace.SpanKindInternal},
 			},
 		},
 		{
@@ -439,6 +485,7 @@ func TestTracer(t *testing.T) {
 						attribute.Int("graphql.operation.complexity.calculated", 1),
 					},
 				},
+				{Name: "http_handler", SpanKind: trace.SpanKindInternal},
 			},
 		},
 		{
@@ -501,6 +548,7 @@ func TestTracer(t *testing.T) {
 						attribute.Int("graphql.operation.complexity.calculated", 3),
 					},
 				},
+				{Name: "http_handler", SpanKind: trace.SpanKindInternal},
 			},
 		},
 		{
@@ -537,6 +585,7 @@ func TestTracer(t *testing.T) {
 						attribute.Int("graphql.operation.complexity.calculated", 1),
 					},
 				},
+				{Name: "http_handler", SpanKind: trace.SpanKindInternal},
 			},
 		},
 	}
@@ -556,7 +605,12 @@ func TestTracer(t *testing.T) {
 			options = append(options, otelgqlgen.WithTracerProvider(tp))
 			gqlsrv.Use(otelgqlgen.New(options...))
 			gqlsrv.Use(extension.FixedComplexityLimit(1000))
-			srv := httptest.NewServer(gqlsrv)
+			testTracer := tp.Tracer("test")
+			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				ctx, span := testTracer.Start(r.Context(), "http_handler")
+				defer span.End()
+				gqlsrv.ServeHTTP(w, r.WithContext(ctx))
+			}))
 			defer srv.Close()
 			body, err := json.Marshal(tc.params)
 			if err != nil {
