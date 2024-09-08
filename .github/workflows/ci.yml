@@ -47,5 +47,5 @@ jobs:
       - run: go mod download
       - name: test
         run: go test -v -race -coverprofile=cover.out $TEST_TARGET
-      - uses: k1LoW/octocov-action@v1.3.0
+      - uses: k1LoW/octocov-action@v1.4.0
         if: ${{ matrix.go_version == 'stable' }}
