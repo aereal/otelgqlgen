@@ -34,7 +34,7 @@ jobs:
       pull-requests: write
     steps:
       - uses: actions/checkout@v4.1.7
-      - uses: actions/setup-go@v5.0.2
+      - uses: actions/setup-go@v5.1.0
         with:
           go-version: ${{ matrix.go_version }}
           cache: true
