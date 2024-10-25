@@ -600,7 +600,7 @@ func TestTracer(t *testing.T) {
 			tp := sdktrace.NewTracerProvider(sdktrace.WithBatcher(exporter))
 			gqlsrv := handler.New(execschema.NewExecutableSchema(execschema.Config{Resolvers: &resolvers.Resolver{}}))
 			gqlsrv.AddTransport(transport.POST{})
-			gqlsrv.Use(extension.AutomaticPersistedQuery{Cache: graphql.NoCache{}})
+			gqlsrv.Use(extension.AutomaticPersistedQuery{Cache: noCache{}})
 			options := tc.options[:]
 			options = append(options, otelgqlgen.WithTracerProvider(tp))
 			gqlsrv.Use(otelgqlgen.New(options...))
@@ -728,3 +728,11 @@ func transformKeyValue(kv attribute.KeyValue) map[attribute.Key]any {
 	}
 	return map[attribute.Key]any{kv.Key: kv.Value.AsInterface()}
 }
+
+type noCache struct{}
+
+var _ graphql.Cache[string] = (*noCache)(nil)
+
+func (noCache) Get(_ context.Context, _ string) (string, bool) { return "", false }
+
+func (noCache) Add(_ context.Context, _ string, _ string) {}
