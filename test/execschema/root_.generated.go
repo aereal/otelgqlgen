@@ -241,7 +241,7 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 }
 
 var sources = []*ast.Source{
-	{Name: "../../main.gql", Input: `directive @goField(
+	{Name: "../main.gql", Input: `directive @goField(
 	forceResolver: Boolean
 	name: String
 ) on INPUT_FIELD_DEFINITION | FIELD_DEFINITION
