@@ -716,7 +716,7 @@ func cmpSpans(want, got tracetest.SpanStubs) string {
 		cmp.Transformer("attribute.KeyValue", transformKeyValue),
 		cmpopts.SortSlices(func(x, y tracetest.SpanStub) bool { return x.EndTime.Before(y.EndTime) }),
 		cmpopts.IgnoreFields(sdktrace.Event{}, "Time"),
-		cmpopts.IgnoreFields(tracetest.SpanStub{}, "Parent", "SpanContext", "StartTime", "EndTime", "Links", "DroppedAttributes", "DroppedEvents", "DroppedLinks", "ChildSpanCount", "Resource", "InstrumentationLibrary"),
+		cmpopts.IgnoreFields(tracetest.SpanStub{}, "Parent", "SpanContext", "StartTime", "EndTime", "Links", "DroppedAttributes", "DroppedEvents", "DroppedLinks", "ChildSpanCount", "Resource", "InstrumentationLibrary", "InstrumentationScope"),
 	}
 	return cmp.Diff(want, got, opts...)
 
