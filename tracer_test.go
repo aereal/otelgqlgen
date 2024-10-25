@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -307,6 +308,51 @@ func TestTracer(t *testing.T) {
 							},
 						},
 					},
+				},
+			},
+		},
+		{
+			name: "error that must be ignored from root field",
+			options: []otelgqlgen.Option{
+				otelgqlgen.WithErrorSelector(func(err error) bool {
+					return !errors.Is(err, &resolvers.NotFoundError{})
+				}),
+			},
+			params: &graphql.RawParams{
+				Query:     `query($name: String!) {user(name: $name) {name}}`,
+				Variables: map[string]any{"name": "not_found"},
+			},
+			spans: tracetest.SpanStubs{
+				{Name: "read", SpanKind: trace.SpanKindServer},
+				{Name: "parsing", SpanKind: trace.SpanKindServer},
+				{Name: "validation", SpanKind: trace.SpanKindServer},
+				{
+					Name:     "Query/user",
+					SpanKind: trace.SpanKindServer,
+					Attributes: []attribute.KeyValue{
+						attribute.String("graphql.resolver.object", "Query"),
+						attribute.String("graphql.resolver.field", "user"),
+						attribute.String("graphql.resolver.alias", "user"),
+						attribute.String("graphql.resolver.args.name", "$name"),
+						attribute.String("graphql.resolver.path", "user"),
+						attribute.Bool("graphql.resolver.is_method", true),
+						attribute.Bool("graphql.resolver.is_resolver", true),
+					},
+				},
+				{
+					Name:     "query",
+					SpanKind: trace.SpanKindServer,
+					Attributes: []attribute.KeyValue{
+						attribute.String("graphql.operation.name", "query"),
+						attribute.String("graphql.operation.type", "query"),
+						attribute.String("graphql.operation.variables.name", "not_found"),
+						attribute.Int("graphql.operation.complexity.limit", 1000),
+						attribute.Int("graphql.operation.complexity.calculated", 2),
+					},
+				},
+				{
+					Name:     "http_handler",
+					SpanKind: trace.SpanKindInternal,
 				},
 			},
 		},

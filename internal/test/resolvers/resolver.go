@@ -11,3 +11,7 @@ type ForbiddenError struct{}
 func (ForbiddenError) Error() string {
 	return "forbidden"
 }
+
+type NotFoundError struct{}
+
+func (NotFoundError) Error() string { return "not found" }

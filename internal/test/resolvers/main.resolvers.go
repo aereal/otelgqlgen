@@ -22,6 +22,9 @@ func (r *queryResolver) User(ctx context.Context, name string) (*model.User, err
 	if name == "forbidden" {
 		return nil, ForbiddenError{}
 	}
+	if name == "not_found" {
+		return nil, &NotFoundError{}
+	}
 	age := 17
 	return &model.User{Name: name, Age: &age}, nil
 }
