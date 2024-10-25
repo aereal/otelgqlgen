@@ -27,6 +27,7 @@ type config struct {
 	tracerProvider          trace.TracerProvider
 	complexityExtensionName string
 	traceStructFields       bool
+	errorSelector           ErrorSelector
 }
 
 type Option func(c *config)
@@ -55,6 +56,15 @@ func TraceStructFields(v bool) Option {
 	}
 }
 
+// ErrorSelector is a predicate that the error should be recorded.
+//
+// The span records only errors that the function returns true.
+// If the function returns false against all of the errors in the gqlgen response, the span status will be Unset instead of Error.
+type ErrorSelector func(err error) bool
+
+// WithErrorSelector creates an Option that tells Tracer uses the given selector.
+func WithErrorSelector(fn ErrorSelector) Option { return func(c *config) { c.errorSelector = fn } }
+
 // New returns a new Tracer with given options.
 func New(opts ...Option) Tracer {
 	cfg := &config{}
@@ -68,9 +78,13 @@ func New(opts ...Option) Tracer {
 		tracer:                  cfg.tracerProvider.Tracer(tracerName),
 		complexityExtensionName: cfg.complexityExtensionName,
 		traceStructFields:       cfg.traceStructFields,
+		errorSelector:           cfg.errorSelector,
 	}
 	if t.complexityExtensionName == "" {
 		t.complexityExtensionName = defaultComplexityExtensionName
+	}
+	if t.errorSelector == nil {
+		t.errorSelector = func(_ error) bool { return true }
 	}
 	return t
 }
@@ -80,6 +94,7 @@ type Tracer struct {
 	tracer                  trace.Tracer
 	complexityExtensionName string
 	traceStructFields       bool
+	errorSelector           ErrorSelector
 }
 
 var _ interface {
@@ -143,9 +158,9 @@ func (t Tracer) InterceptResponse(ctx context.Context, next graphql.ResponseHand
 	span.SetAttributes(attrs...)
 	resp := next(ctx)
 	if resp != nil && len(resp.Errors) > 0 {
-		recordGQLErrors(span, resp.Errors)
+		recordGQLErrors(span, resp.Errors, t.errorSelector)
 		if parentSpan.SpanContext().IsValid() {
-			recordGQLErrors(parentSpan, resp.Errors)
+			recordGQLErrors(parentSpan, resp.Errors, t.errorSelector)
 		}
 	}
 	return resp
@@ -203,7 +218,7 @@ func (t Tracer) InterceptField(ctx context.Context, next graphql.Resolver) (any,
 
 	resp, err := next(ctx)
 	if errs := graphql.GetFieldErrors(ctx, fieldCtx); len(errs) > 0 {
-		recordGQLErrors(span, errs)
+		recordGQLErrors(span, errs, t.errorSelector)
 	}
 	return resp, err
 }
@@ -223,15 +238,20 @@ func operationName(ctx context.Context) string {
 	return string(op.Operation)
 }
 
-func recordGQLErrors(span trace.Span, errs gqlerror.List) {
-	span.SetStatus(codes.Error, errs.Error())
-	for _, e := range errs {
-		attrs := []attribute.KeyValue{
-			keyErrorPath.String(e.Path.String()),
+func recordGQLErrors(span trace.Span, errs gqlerror.List, selector ErrorSelector) {
+	var recorded bool
+	for _, gqlErr := range errs {
+		if !selector(gqlErr) {
+			continue
 		}
-		err := unwrapErr(e)
-		span.RecordError(err, trace.WithStackTrace(true), trace.WithAttributes(attrs...))
+		recorded = true
+		attrErrorPath := keyErrorPath.String(gqlErr.Path.String())
+		span.RecordError(unwrapErr(gqlErr), trace.WithStackTrace(true), trace.WithAttributes(attrErrorPath))
 	}
+	if !recorded {
+		return
+	}
+	span.SetStatus(codes.Error, errs.Error())
 }
 
 func unwrapErr(err error) error {
