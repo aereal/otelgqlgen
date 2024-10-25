@@ -217,7 +217,7 @@ func operationName(ctx context.Context) string {
 	if op == nil {
 		return "GraphQL Operation"
 	}
-	if op := opCtx.Operation; op.Name != "" {
+	if op.Name != "" {
 		return op.Name
 	}
 	return string(op.Operation)
