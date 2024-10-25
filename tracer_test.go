@@ -1,4 +1,4 @@
-package test
+package otelgqlgen_test
 
 import (
 	"bytes"
@@ -14,8 +14,8 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler/extension"
 	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/aereal/otelgqlgen"
-	"github.com/aereal/otelgqlgen/test/execschema"
-	"github.com/aereal/otelgqlgen/test/resolvers"
+	"github.com/aereal/otelgqlgen/internal/test/execschema"
+	"github.com/aereal/otelgqlgen/internal/test/resolvers"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"go.opentelemetry.io/otel/attribute"
@@ -285,7 +285,7 @@ func TestTracer(t *testing.T) {
 							Name: semconv.ExceptionEventName,
 							Attributes: []attribute.KeyValue{
 								attribute.String("graphql.errors.path", "user"),
-								semconv.ExceptionTypeKey.String("github.com/aereal/otelgqlgen/test/resolvers.ForbiddenError"),
+								semconv.ExceptionTypeKey.String("github.com/aereal/otelgqlgen/internal/test/resolvers.ForbiddenError"),
 								semconv.ExceptionMessageKey.String("forbidden"),
 								attrStacktrace,
 							},
@@ -301,7 +301,7 @@ func TestTracer(t *testing.T) {
 							Name: semconv.ExceptionEventName,
 							Attributes: []attribute.KeyValue{
 								attribute.String("graphql.errors.path", "user"),
-								semconv.ExceptionTypeKey.String("github.com/aereal/otelgqlgen/test/resolvers.ForbiddenError"),
+								semconv.ExceptionTypeKey.String("github.com/aereal/otelgqlgen/internal/test/resolvers.ForbiddenError"),
 								semconv.ExceptionMessageKey.String("forbidden"),
 								attrStacktrace,
 							},

@@ -10,7 +10,7 @@ import (
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
-	"github.com/aereal/otelgqlgen/test/model"
+	"github.com/aereal/otelgqlgen/internal/test/model"
 	gqlparser "github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
 )
@@ -241,7 +241,7 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 }
 
 var sources = []*ast.Source{
-	{Name: "../main.gql", Input: `directive @goField(
+	{Name: "../../../main.gql", Input: `directive @goField(
 	forceResolver: Boolean
 	name: String
 ) on INPUT_FIELD_DEFINITION | FIELD_DEFINITION
