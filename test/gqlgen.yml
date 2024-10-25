@@ -3,14 +3,14 @@ schema:
   - '*.gql'
 exec:
   layout: follow-schema
-  dir: ./test/execschema
+  dir: ./execschema
   package: execschema
 model:
-  filename: ./test/model/model_gen.go
+  filename: ./model/model_gen.go
   package: model
 resolver:
   layout: follow-schema
-  dir: ./test/resolvers
+  dir: ./resolvers
   package: resolvers
   filename_template: "{name}.resolvers.go"
 
