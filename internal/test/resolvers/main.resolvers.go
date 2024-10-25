@@ -8,8 +8,8 @@ import (
 	"context"
 	"errors"
 
-	"github.com/aereal/otelgqlgen/test/execschema"
-	"github.com/aereal/otelgqlgen/test/model"
+	"github.com/aereal/otelgqlgen/internal/test/execschema"
+	"github.com/aereal/otelgqlgen/internal/test/model"
 )
 
 // RegisterUser is the resolver for the registerUser field.

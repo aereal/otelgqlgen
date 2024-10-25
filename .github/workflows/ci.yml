@@ -21,8 +21,6 @@ jobs:
       - name: lint
         uses: reviewdog/action-golangci-lint@v2.6.2
   test:
-    env:
-      TEST_TARGET: ./... github.com/aereal/otelgqlgen/test
     strategy:
       matrix:
         go_version:
@@ -41,13 +39,9 @@ jobs:
           cache: true
           cache-dependency-path: |
             go.sum
-            test/go.sum
-      - run: |
-          go work init ./ ./test
-          go work sync
       - run: go mod download
       - name: test
-        run: go test -v -race -coverprofile=cover.out $TEST_TARGET
+        run: go test -v -race -coverprofile=cover.out ./...
       - uses: k1LoW/octocov-action@v1.3.0
         if: ${{ matrix.go_version == 'stable' }}
   check-code-generation:
@@ -62,10 +56,6 @@ jobs:
           cache: true
           cache-dependency-path: |
             go.sum
-            test/go.sum
-      - run: |
-          go work init ./ ./test
-          go work sync
       - run: go mod download
-      - run: go generate ./... ./test
+      - run: go generate ./...
       - run: git diff --exit-code
