@@ -4,7 +4,7 @@ on:
 jobs:
   ok:
     if: failure()
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs:
       - lint
       - test
@@ -12,7 +12,7 @@ jobs:
     steps:
       - run: exit 1
   lint:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - name: lint
@@ -23,7 +23,7 @@ jobs:
         go_version:
           - stable
           - oldstable
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       actions: read
       contents: read
@@ -42,7 +42,7 @@ jobs:
       - uses: k1LoW/octocov-action@5213913fe329368ab9dafa16f18f4f3cce1062f0 # v1.3.0
         if: ${{ matrix.go_version == 'stable' }}
   check-code-generation:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
     steps:
