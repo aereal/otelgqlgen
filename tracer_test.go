@@ -673,7 +673,7 @@ func TestTracer(t *testing.T) {
 			}
 			defer resp.Body.Close()
 			if resp.StatusCode != http.StatusOK {
-				respBody, _ := io.ReadAll(resp.Body)
+				respBody, _ := io.ReadAll(resp.Body) //nolint:errcheck
 				t.Fatalf("http.Response.Status: %d %#v %s", resp.StatusCode, resp.Header, string(respBody))
 			}
 			if err := tp.ForceFlush(ctx); err != nil {
@@ -745,7 +745,7 @@ func TestTracer_no_operation_provided(t *testing.T) {
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusUnprocessableEntity {
-		respBody, _ := io.ReadAll(resp.Body)
+		respBody, _ := io.ReadAll(resp.Body) //nolint:errcheck
 		t.Fatalf("http.Response.Status: %d %#v %s", resp.StatusCode, resp.Header, string(respBody))
 	}
 	if err := tp.ForceFlush(ctx); err != nil {
