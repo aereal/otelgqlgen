@@ -25,9 +25,9 @@ const (
 
 type config struct {
 	tracerProvider          trace.TracerProvider
+	errorSelector           ErrorSelector
 	complexityExtensionName string
 	traceStructFields       bool
-	errorSelector           ErrorSelector
 }
 
 type Option func(c *config)
@@ -92,9 +92,9 @@ func New(opts ...Option) Tracer {
 // Tracer is a gqlgen extension to collect traces from the resolver.
 type Tracer struct {
 	tracer                  trace.Tracer
+	errorSelector           ErrorSelector
 	complexityExtensionName string
 	traceStructFields       bool
-	errorSelector           ErrorSelector
 }
 
 var _ interface {
