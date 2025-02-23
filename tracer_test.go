@@ -653,9 +653,9 @@ func TestTracer(t *testing.T) {
 			gqlsrv.Use(extension.FixedComplexityLimit(1000))
 			testTracer := tp.Tracer("test")
 			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				ctx, span := testTracer.Start(r.Context(), "http_handler")
+				reqCtx, span := testTracer.Start(r.Context(), "http_handler")
 				defer span.End()
-				gqlsrv.ServeHTTP(w, r.WithContext(ctx))
+				gqlsrv.ServeHTTP(w, r.WithContext(reqCtx))
 			}))
 			defer srv.Close()
 			body, err := json.Marshal(tc.params)
