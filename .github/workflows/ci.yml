@@ -29,8 +29,8 @@ jobs:
           _go_version: ${{ steps.setup-go.outputs.go-version }}
         run: |
           golangci-lint run \
-            --go "$_go_version" \
-            --out-format line-number \
+            --output.text.path stdout \
+            --output.text.print-issued-lines \
             --issues-exit-code 0 \
             --config .golangci.yml \
             1>lint-stdout.txt 2>/dev/stderr
