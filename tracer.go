@@ -255,7 +255,7 @@ func recordGQLErrors(span trace.Span, errs gqlerror.List, selector ErrorSelector
 }
 
 func unwrapErr(err error) error {
-	var underlying error = err
+	underlying := err
 	for {
 		wrapped, ok := underlying.(interface{ Unwrap() error })
 		if !ok {
