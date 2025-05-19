@@ -198,7 +198,7 @@ func fieldSpanName(fc *graphql.FieldContext) string {
 
 func (t Tracer) InterceptField(ctx context.Context, next graphql.Resolver) (any, error) {
 	fieldCtx := graphql.GetFieldContext(ctx)
-	if !t.traceStructFields && !(fieldCtx.IsMethod || fieldCtx.IsResolver) {
+	if !t.traceStructFields && (!fieldCtx.IsMethod && !fieldCtx.IsResolver) {
 		return next(ctx)
 	}
 	field := fieldCtx.Field
@@ -255,7 +255,7 @@ func recordGQLErrors(span trace.Span, errs gqlerror.List, selector ErrorSelector
 }
 
 func unwrapErr(err error) error {
-	var underlying error = err
+	underlying := err
 	for {
 		wrapped, ok := underlying.(interface{ Unwrap() error })
 		if !ok {
