@@ -35,3 +35,5 @@ require (
 	golang.org/x/tools v0.32.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+tool github.com/99designs/gqlgen
