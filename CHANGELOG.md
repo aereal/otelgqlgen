@@ -1,5 +1,11 @@
 # Changelog
 
+## [v0.10.2](https://github.com/aereal/otelgqlgen/compare/v0.10.1...v0.10.2) - 2025-06-19
+- chore(deps): update dependency aquaproj/aqua-renovate-config to v2.8.1 by @renovate in https://github.com/aereal/otelgqlgen/pull/133
+- chore(deps): update dependency go to v1.24.4 by @renovate in https://github.com/aereal/otelgqlgen/pull/136
+- fix(deps): update module github.com/vektah/gqlparser/v2 to v2.5.28 by @renovate in https://github.com/aereal/otelgqlgen/pull/139
+- chore(deps): update dependency aquaproj/aqua-renovate-config to v2.8.2 by @renovate in https://github.com/aereal/otelgqlgen/pull/140
+
 ## [v0.10.1](https://github.com/aereal/otelgqlgen/compare/v0.10.0...v0.10.1) - 2025-05-19
 - chore(deps): update dependency go to v1.23.3 by @renovate in https://github.com/aereal/otelgqlgen/pull/103
 - fix(deps): update module github.com/vektah/gqlparser/v2 to v2.5.19 by @renovate in https://github.com/aereal/otelgqlgen/pull/104
