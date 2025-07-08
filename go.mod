@@ -2,7 +2,7 @@ module github.com/aereal/otelgqlgen
 
 go 1.23.0
 
-toolchain go1.24.4
+toolchain go1.24.5
 
 require (
 	github.com/99designs/gqlgen v0.17.73
