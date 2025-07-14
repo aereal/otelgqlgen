@@ -1,5 +1,17 @@
 # Changelog
 
+## [v0.10.2](https://github.com/aereal/otelgqlgen/compare/v0.10.1...v0.10.2) - 2025-07-14
+- chore(deps): update dependency aquaproj/aqua-renovate-config to v2.8.1 by @renovate[bot] in https://github.com/aereal/otelgqlgen/pull/133
+- chore(deps): update dependency go to v1.24.4 by @renovate[bot] in https://github.com/aereal/otelgqlgen/pull/136
+- fix(deps): update module github.com/vektah/gqlparser/v2 to v2.5.28 by @renovate[bot] in https://github.com/aereal/otelgqlgen/pull/139
+- chore(deps): update dependency aquaproj/aqua-renovate-config to v2.8.2 by @renovate[bot] in https://github.com/aereal/otelgqlgen/pull/140
+- chore(deps): update aquaproj/aqua-installer action to v4.0.1 by @renovate[bot] in https://github.com/aereal/otelgqlgen/pull/141
+- chore(deps): update aquaproj/aqua-installer action to v4.0.2 by @renovate[bot] in https://github.com/aereal/otelgqlgen/pull/142
+- fix(deps): update module github.com/vektah/gqlparser/v2 to v2.5.29 by @renovate[bot] in https://github.com/aereal/otelgqlgen/pull/143
+- fix(deps): update module github.com/vektah/gqlparser/v2 to v2.5.30 by @renovate[bot] in https://github.com/aereal/otelgqlgen/pull/144
+- chore(deps): update dependency go to v1.24.5 by @renovate[bot] in https://github.com/aereal/otelgqlgen/pull/146
+- fix(deps): update dependencies by @aereal in https://github.com/aereal/otelgqlgen/pull/147
+
 ## [v0.10.1](https://github.com/aereal/otelgqlgen/compare/v0.10.0...v0.10.1) - 2025-05-19
 - chore(deps): update dependency go to v1.23.3 by @renovate in https://github.com/aereal/otelgqlgen/pull/103
 - fix(deps): update module github.com/vektah/gqlparser/v2 to v2.5.19 by @renovate in https://github.com/aereal/otelgqlgen/pull/104
