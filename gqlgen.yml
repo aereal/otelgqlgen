@@ -13,4 +13,4 @@ resolver:
   dir: ./internal/test/resolvers
   package: resolvers
   filename_template: "{name}.resolvers.go"
-
+omit_gqlgen_version_in_file_notice: true
