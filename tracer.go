@@ -24,10 +24,11 @@ const (
 )
 
 type config struct {
-	tracerProvider          trace.TracerProvider
-	errorSelector           ErrorSelector
-	complexityExtensionName string
-	traceStructFields       bool
+	tracerProvider            trace.TracerProvider
+	errorSelector             ErrorSelector
+	complexityExtensionName   string
+	traceStructFields         bool
+	shouldTraceCaptureTimings bool
 }
 
 type Option func(c *config)
@@ -65,9 +66,16 @@ type ErrorSelector func(err error) bool
 // WithErrorSelector creates an Option that tells Tracer uses the given selector.
 func WithErrorSelector(fn ErrorSelector) Option { return func(c *config) { c.errorSelector = fn } }
 
+// ShouldTraceCaptureTimings creates an [Option] that tells the [Tracer] to trace GraphQL timings.
+func ShouldTraceCaptureTimings(v bool) Option {
+	return func(c *config) { c.shouldTraceCaptureTimings = v }
+}
+
 // New returns a new Tracer with given options.
 func New(opts ...Option) Tracer {
-	cfg := &config{}
+	cfg := &config{
+		shouldTraceCaptureTimings: true, // default is true for backward compatibility
+	}
 	for _, o := range opts {
 		o(cfg)
 	}
@@ -75,10 +83,11 @@ func New(opts ...Option) Tracer {
 		cfg.tracerProvider = otel.GetTracerProvider()
 	}
 	t := Tracer{
-		tracer:                  cfg.tracerProvider.Tracer(tracerName),
-		complexityExtensionName: cfg.complexityExtensionName,
-		traceStructFields:       cfg.traceStructFields,
-		errorSelector:           cfg.errorSelector,
+		tracer:                    cfg.tracerProvider.Tracer(tracerName),
+		complexityExtensionName:   cfg.complexityExtensionName,
+		traceStructFields:         cfg.traceStructFields,
+		errorSelector:             cfg.errorSelector,
+		shouldTraceCaptureTimings: cfg.shouldTraceCaptureTimings,
 	}
 	if t.complexityExtensionName == "" {
 		t.complexityExtensionName = defaultComplexityExtensionName
@@ -91,10 +100,11 @@ func New(opts ...Option) Tracer {
 
 // Tracer is a gqlgen extension to collect traces from the resolver.
 type Tracer struct {
-	tracer                  trace.Tracer
-	errorSelector           ErrorSelector
-	complexityExtensionName string
-	traceStructFields       bool
+	tracer                    trace.Tracer
+	errorSelector             ErrorSelector
+	complexityExtensionName   string
+	traceStructFields         bool
+	shouldTraceCaptureTimings bool
 }
 
 var _ interface {
@@ -136,7 +146,9 @@ func (t Tracer) InterceptResponse(ctx context.Context, next graphql.ResponseHand
 	if !span.IsRecording() {
 		return next(ctx)
 	}
-	t.captureOperationTimings(ctx)
+	if t.shouldTraceCaptureTimings {
+		t.captureOperationTimings(ctx)
+	}
 
 	opCtx := graphql.GetOperationContext(ctx)
 	attrs := make([]attribute.KeyValue, 0, len(opCtx.Variables)+2+2)
