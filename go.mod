@@ -7,7 +7,7 @@ toolchain go1.24.6
 require (
 	github.com/99designs/gqlgen v0.17.76
 	github.com/google/go-cmp v0.7.0
-	github.com/vektah/gqlparser/v2 v2.5.30
+	github.com/vektah/gqlparser/v2 v2.5.31
 	go.opentelemetry.io/otel v1.39.0
 	go.opentelemetry.io/otel/sdk v1.39.0
 	go.opentelemetry.io/otel/trace v1.39.0
