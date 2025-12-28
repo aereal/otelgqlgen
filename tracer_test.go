@@ -757,6 +757,90 @@ func TestTracer_no_operation_provided(t *testing.T) {
 	}
 }
 
+func TestTracer_no_timing_trace(t *testing.T) {
+	wantSpans := tracetest.SpanStubs{
+		{
+			Name:     "Query/user",
+			SpanKind: trace.SpanKindServer,
+			Attributes: []attribute.KeyValue{
+				attribute.String("graphql.resolver.object", "Query"),
+				attribute.String("graphql.resolver.field", "user"),
+				attribute.String("graphql.resolver.alias", "user"),
+				attribute.String("graphql.resolver.args.name", "$name"),
+				attribute.String("graphql.resolver.path", "user"),
+				attribute.Bool("graphql.resolver.is_method", true),
+				attribute.Bool("graphql.resolver.is_resolver", true),
+			}},
+		{
+			Name:     "User/name",
+			SpanKind: trace.SpanKindServer,
+			Attributes: []attribute.KeyValue{
+				attribute.String("graphql.resolver.object", "User"),
+				attribute.String("graphql.resolver.field", "name"),
+				attribute.String("graphql.resolver.alias", "name"),
+				attribute.String("graphql.resolver.path", "user.name"),
+				attribute.Bool("graphql.resolver.is_method", true),
+				attribute.Bool("graphql.resolver.is_resolver", true),
+			}},
+		{
+			Name:     "query",
+			SpanKind: trace.SpanKindServer,
+			Attributes: []attribute.KeyValue{
+				attribute.String("graphql.operation.name", "query"),
+				attribute.String("graphql.operation.type", "query"),
+				attribute.String("graphql.operation.variables.name", "aereal"),
+			},
+		},
+		{Name: "http_handler", SpanKind: trace.SpanKindInternal},
+	}
+
+	ctx, cancel := context.WithCancel(t.Context())
+	if deadline, ok := t.Deadline(); ok {
+		ctx, cancel = context.WithDeadline(ctx, deadline)
+	}
+	defer cancel()
+	exporter := tracetest.NewInMemoryExporter()
+	tp := sdktrace.NewTracerProvider(sdktrace.WithBatcher(exporter))
+	gqlsrv := handler.New(execschema.NewExecutableSchema(execschema.Config{Resolvers: &resolvers.Resolver{}}))
+	gqlsrv.AddTransport(transport.POST{})
+	gqlsrv.Use(otelgqlgen.New(otelgqlgen.WithTracerProvider(tp), otelgqlgen.ShouldTraceCaptureTimings(false)))
+	testTracer := tp.Tracer("test")
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		reqCtx, span := testTracer.Start(r.Context(), "http_handler")
+		defer span.End()
+		gqlsrv.ServeHTTP(w, r.WithContext(reqCtx))
+	}))
+	defer srv.Close()
+	body, err := json.Marshal(&graphql.RawParams{
+		Query:     `query($name: String!) {user(name: $name) {name}}`,
+		Variables: map[string]any{"name": "aereal"},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, srv.URL, bytes.NewReader(body))
+	if err != nil {
+		t.Fatalf("http.NewRequestWithContext: %+v", err)
+	}
+	req.Header.Set("content-type", "application/json")
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("http.Client.Do: %+v", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		respBody, _ := io.ReadAll(resp.Body) //nolint:errcheck
+		t.Fatalf("http.Response.Status: %d %#v %s", resp.StatusCode, resp.Header, string(respBody))
+	}
+	if err := tp.ForceFlush(ctx); err != nil {
+		t.Fatal(err)
+	}
+	gotSpans := exporter.GetSpans()
+	if diff := cmpSpans(wantSpans, gotSpans); diff != "" {
+		t.Errorf("-want, +got:\n%s", diff)
+	}
+}
+
 func cmpSpans(want, got tracetest.SpanStubs) string {
 	opts := []cmp.Option{
 		cmp.Transformer("attribute.KeyValue", transformKeyValue),
