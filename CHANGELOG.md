@@ -1,5 +1,8 @@
 # Changelog
 
+## [v0.11.0](https://github.com/aereal/otelgqlgen/compare/v0.10.3...v0.11.0) - 2025-12-28
+- feat: add ShouldTraceCaptureTimings() option by @aereal in https://github.com/aereal/otelgqlgen/pull/158
+
 ## [v0.10.3](https://github.com/aereal/otelgqlgen/compare/v0.10.2...v0.10.3) - 2025-12-28
 - chore(deps): update dependency go to v1.24.6 by @renovate[bot] in https://github.com/aereal/otelgqlgen/pull/149
 - chore(deps): update aquaproj/aqua-installer action to v4.0.3 by @renovate[bot] in https://github.com/aereal/otelgqlgen/pull/156
