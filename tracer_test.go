@@ -637,7 +637,7 @@ func TestTracer(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			ctx, cancel := context.WithCancel(context.Background())
+			ctx, cancel := context.WithCancel(t.Context())
 			if deadline, ok := t.Deadline(); ok {
 				ctx, cancel = context.WithDeadline(ctx, deadline)
 			}
@@ -688,7 +688,7 @@ func TestTracer(t *testing.T) {
 }
 
 func TestTracer_no_operation_provided(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(t.Context())
 	if deadline, ok := t.Deadline(); ok {
 		ctx, cancel = context.WithDeadline(ctx, deadline)
 	}
